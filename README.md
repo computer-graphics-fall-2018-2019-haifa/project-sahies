@@ -1,11 +1,11 @@
 # Computer Graphics 203.3710, Winter 2018/2019
 ## Students Team data
 
-Name: 'Your real name'  
-Student Number: 'Your student number'
+Name: Or Berger
+Student Number: 308571512
 
-Name: 'Your real name'  
-Student Number: 'Your student number'
+Name: Mor Vaknin  
+Student Number: 305334674
 
 ### Lecturer
 *Roi Poranne*
