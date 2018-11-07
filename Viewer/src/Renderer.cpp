@@ -3,10 +3,16 @@
 #include "Renderer.h"
 #include "InitShader.h"
 #include "MeshModel.h"
+#include "Utils.h"
 #include <imgui/imgui.h>
 #include <vector>
 #include <cmath>
+#include "ImguiMenus.h"
 
+
+
+#define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
+// TODO ^
 #define INDEX(width,x,y,c) ((x)+(y)*(width))*3+(c)
 
 Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int viewportY) :
@@ -16,6 +22,56 @@ Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int vie
 	initOpenGLRendering();
 	SetViewport(viewportWidth, viewportHeight, viewportX, viewportY);
 }
+
+
+
+void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) {
+	// Bresenham's line algorithm
+	const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
+
+	if (steep)
+	{
+		std::swap(x1, y1);
+		std::swap(x2, y2);
+	}
+
+	if (x1 > x2)
+	{
+		std::swap(x1, x2);
+		std::swap(y1, y2);
+	}
+
+	const float dx = x2 - x1;
+	const float dy = fabs(y2 - y1);
+
+	float error = dx / 2.0f;
+	const int ystep = (y1 < y2) ? 1 : -1;
+	int y = (int)y1;
+
+	const int maxX = (int)x2;
+
+	for (int x = (int)x1; x < maxX; x++)
+	{
+		if (steep)
+		{
+			putPixel(y, x, glm::vec3(0,0,0));
+		}
+		else
+		{
+			putPixel(x, y, glm::vec3(0, 0, 0));
+		}
+
+		error -= dy;
+		if (error < 0)
+		{
+			y += ystep;
+			error += dx;
+		}
+	}
+}
+
+
+
 
 Renderer::~Renderer()
 {
@@ -33,6 +89,7 @@ void Renderer::putPixel(int i, int j, const glm::vec3& color)
 	colorBuffer[INDEX(viewportWidth, i, j, 1)] = color.y;
 	colorBuffer[INDEX(viewportWidth, i, j, 2)] = color.z;
 }
+
 
 void Renderer::createBuffers(int viewportWidth, int viewportHeight)
 {
@@ -62,6 +119,7 @@ void Renderer::ClearColorBuffer(const glm::vec3& color)
 	}
 }
 
+
 void Renderer::SetViewport(int viewportWidth, int viewportHeight, int viewportX, int viewportY)
 {
 	this->viewportX = viewportX;
@@ -72,32 +130,65 @@ void Renderer::SetViewport(int viewportWidth, int viewportHeight, int viewportX,
 	createOpenGLBuffer();
 }
 
+//void Renderer::SetViewport(int viewportWidth, int viewportHeight, int viewportX, int viewportY)
+//{
+//	this -
+//
+//}
+
+void Renderer::Transform(MeshModel& model)
+{
+	std::string transform = model.GetTransform();
+	glm::vec3 cordinates = model.GetCordinates();
+	glm::mat4 matrix = Utils::GetMatrix(transform, cordinates.x, cordinates.y, cordinates.z);
+
+	std::vector<glm::vec4> new_vertices4d = Utils::Vec3to4(model.GetVertices(), matrix);
+	std::vector<glm::vec3> new_vertices3d = Utils::Vec4to3Xmat(new_vertices4d);
+	model.setVertices(new_vertices3d);
+}
+
+
+
 void Renderer::Render(const Scene& scene)
 {
-	//#############################################
-	//## You should override this implementation ##
-	//## Here you should render the scene.       ##
-	//#############################################
+	int x_center = viewportWidth / 2;
+	int y_center = viewportHeight / 2;
 
-	// Draw a chess board in the middle of the screen
-	for (int i = 100; i < viewportWidth - 100; i++)
-	{
-		for (int j = 100; j < viewportHeight - 100; j++)
-		{
-			int mod_i = i / 50;
-			int mod_j = j / 50;
+	bresenham_line(0,y_center, viewportWidth, y_center);
+	bresenham_line(x_center, 0, x_center, viewportHeight);
 
-			int odd = (mod_i + mod_j) % 2;
-			if (odd)
-			{
-				putPixel(i, j, glm::vec3(0, 1, 0));
-			}
-			else
-			{
-				putPixel(i, j, glm::vec3(1, 0, 0));
-			}
+	if (scene.GetModelCount()) {
+
+		std::vector<std::shared_ptr<MeshModel>> models = scene.GetModels();
+		for (auto model : models) {
+			//DrawTriangle(Transform(Transform(Transform(*model, "scale", 20, 20, 0),"translate",800,500,0),"rotate",0));
+			//DrawTriangle(Transform(Transform(*model,"translate", x_center, y_center,0),"scale",20,20,0));
+			DrawTriangle(*model);
 		}
+
 	}
+}
+
+
+
+void Renderer::DrawTriangle(MeshModel& model)
+{
+	std::vector<glm::vec3> vertices = model.GetVertices();
+	std::vector<Face> faces = model.GetFaces();
+
+
+	for (Face& face : faces) {
+
+		int a = face.GetVertexIndex(0) - 1;
+		int b = face.GetVertexIndex(1) - 1;
+		int c = face.GetVertexIndex(2) - 1;
+
+		bresenham_line(vertices[a].x, vertices[a].y, vertices[b].x, vertices[b].y);
+		bresenham_line(vertices[a].x, vertices[a].y, vertices[c].x, vertices[c].y);
+		bresenham_line(vertices[b].x, vertices[b].y, vertices[c].x, vertices[c].y);
+	}
+
+
 }
 
 //##############################
@@ -143,7 +234,8 @@ void Renderer::initOpenGLRendering()
 		0,1,
 		0,1,
 		1,0,
-		1,1};
+		1,1
+	};
 
 	// Makes this buffer the current one.
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);

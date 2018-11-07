@@ -19,6 +19,85 @@ glm::vec2 Utils::Vec2fFromStream(std::istream& issLine)
 	return glm::vec2(x, y);
 }
 
+glm::vec4 Utils::Vec3to4(const glm::vec3 vertex)
+{
+	return glm::vec4(vertex[0], vertex[1], vertex[2], 1.0f);
+}
+
+std::vector<glm::vec4> Utils::Vec3to4(std::vector<glm::vec3> vertices, glm::mat4 matrix)
+{
+	std::vector<glm::vec4> vertices_tmp;
+
+	for (glm::vec3 vertex : vertices) 
+		vertices_tmp.push_back(matrix * Utils::Vec3to4(vertex));
+
+	return vertices_tmp;
+
+}
+
+glm::vec3 Utils::Vec4to3(const glm::vec4 vertex)
+{
+	return glm::vec3(vertex[0] / vertex[3], vertex[1] / vertex[3], vertex[2] / vertex[3]);
+}
+
+std::vector<glm::vec3> Utils::Vec4to3Xmat(const std::vector<glm::vec4> vertices)
+{
+	std::vector<glm::vec3> vertices_tmp;
+
+	for (glm::vec4 vertex : vertices) 
+		vertices_tmp.push_back(Utils::Vec4to3(vertex));
+	
+	return vertices_tmp;
+}
+
+
+ glm::mat4 Utils::GetMatrix(std::string transformation,float a, float b, float c) 
+{
+	glm::mat4 mat;
+	const float pi = 3.14159265;
+	float theta = pi / 180 * a;
+
+	if (transformation == "scale") 
+		mat = {
+			a, 0, 0, 0,
+			0, b, 0, 0,
+			0, 0, c, 0,
+			0, 0, 0 ,1.0f
+		};
+
+	else if (transformation == "translate") {
+		mat = {
+			1.0f, 0, 0, a,
+			0, 1.0f, 0, b,
+			0, 0, 1.0f, c,
+			0, 0, 0, 1.0f
+		};
+		//mat = glm::transpose(mat);
+	}
+
+	else if (transformation  == "rotate") 
+		mat = {
+			1 ,0 ,0 ,0,
+			0, cos(theta), -sin(theta), 0,
+			0, sin(theta), cos(theta), 0,
+			0, 0,0, 1
+		};
+		
+
+	else 
+		mat = {
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0 ,1
+		};
+	
+
+
+	return glm::transpose(mat);
+}
+
+
 MeshModel Utils::LoadMeshModel(const std::string& filePath)
 {
 	std::vector<Face> faces;
@@ -46,11 +125,11 @@ MeshModel Utils::LoadMeshModel(const std::string& filePath)
 		}
 		else if (lineType == "vn")
 		{
-			// Add the required code here...
+			normals.push_back(Utils::Vec3fFromStream(issLine));
 		}
 		else if (lineType == "vt")
 		{
-			// Texture coordinates
+			normals.push_back(Utils::Vec3fFromStream(issLine));
 		}
 		else if (lineType == "f")
 		{
@@ -58,11 +137,11 @@ MeshModel Utils::LoadMeshModel(const std::string& filePath)
 		}
 		else if (lineType == "#" || lineType == "")
 		{
-			// comment / empty line
+			continue;
 		}
 		else
 		{
-			std::cout << "Found unknown line Type \"" << lineType << "\"";
+			std::cout << "Found unknown line Type: " << lineType << std::endl;
 		}
 	}
 

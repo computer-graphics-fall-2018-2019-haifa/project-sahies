@@ -24,8 +24,10 @@ public:
 	Scene();
 
 	void AddModel(const std::shared_ptr<MeshModel>& model);
+	void Scene::PopModel();
 	const int GetModelCount() const;
 
+	const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const;
 	void AddCamera(const Camera& camera);
 	const int GetCameraCount() const;
 
