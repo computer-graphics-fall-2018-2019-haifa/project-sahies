@@ -21,6 +21,8 @@ private:
 
 	void putPixel(int x, int y, const glm::vec3& color);
 	void createBuffers(int viewportWidth, int viewportHeight);
+	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+
 
 	GLuint glScreenTex;
 	GLuint glScreenVtc;

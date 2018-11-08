@@ -133,6 +133,9 @@ void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& 
 	int frameBufferWidth, frameBufferHeight;
 	glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
 
+	
+
+
 	// Resize handling here... (a suggestion)
 
 	// Clear the frame buffer

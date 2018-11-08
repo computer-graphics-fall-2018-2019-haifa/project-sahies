@@ -8,6 +8,7 @@
 #include <cmath>
 
 #define INDEX(width,x,y,c) ((x)+(y)*(width))*3+(c)
+#define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 
 Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int viewportY) :
 	colorBuffer(nullptr),
@@ -72,32 +73,65 @@ void Renderer::SetViewport(int viewportWidth, int viewportHeight, int viewportX,
 	createOpenGLBuffer();
 }
 
-void Renderer::Render(const Scene& scene)
+
+void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {
-	//#############################################
-	//## You should override this implementation ##
-	//## Here you should render the scene.       ##
-	//#############################################
+	GLfloat dx, dy, x, y, d;
+	int s1, s2, temp;
+	bool swap = false;
 
-	// Draw a chess board in the middle of the screen
-	for (int i = 100; i < viewportWidth - 100; i++)
+	dx = abs(x2 - x1);
+	dy = abs(y2 - y1);
+	s1 = sign(x2 - x1);
+	s2 = sign(y2 - y1);
+
+	/* Check if dx or dy has a greater range */
+	/* if dy has a greater range than dx swap dx and dy */
+	if (dy > dx)
 	{
-		for (int j = 100; j < viewportHeight - 100; j++)
-		{
-			int mod_i = i / 50;
-			int mod_j = j / 50;
+		temp = dx;
+		dx = dy;
+		dy = temp;
+		swap = true;
+	}
 
-			int odd = (mod_i + mod_j) % 2;
-			if (odd)
-			{
-				putPixel(i, j, glm::vec3(0, 1, 0));
-			}
+	/* Set the initial decision parameter and the initial point */
+	d = 2 * dy - dx;
+	x = x1;
+	y = y1;
+
+	for (int i = 0; i < dx; i++)
+	{
+		putPixel(x, y, glm::vec3(0, 0, 0));
+
+		while (d >= 0)
+		{
+			if (swap)
+				x = x + s1;
 			else
 			{
-				putPixel(i, j, glm::vec3(1, 0, 0));
+				y = y + s2;
+				d = d - 2 * dx;
 			}
 		}
+		if (swap)
+			y = y + s2;
+		else
+			x = x + s1;
+		d = d + 2 * dy;
 	}
+	//glFlush();
+}
+
+
+
+
+void Renderer::Render(const Scene& scene)
+{
+	float x1 = 150.05, y1 = 150.05, x2 = 300.05, y2 = 150.05;
+	bresenham_line(x1, y1, x2, y2);
+	bresenham_line(150, 150, 150, 300);
+
 }
 
 //##############################
