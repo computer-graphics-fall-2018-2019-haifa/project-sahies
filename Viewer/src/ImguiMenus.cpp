@@ -32,61 +32,57 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		ImGui::ShowDemoWindow(&showDemoWindow);
 	}
 
+	std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies\\Data\\camera.obj";
+
+
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
 		static int counter = 0;
 		
 
-		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+		ImGui::Begin("Or Berger AND Mor Vaknin PlayGround");                          // Create a window called "Hello, world!" and append into it.
 
-		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+		ImGui::Text("This is some notuseful text.");               // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
+
+
+		if (ImGui::Button("add camera") || scene.GetCameraCount() == 0) {
+			MeshModel cam_obj = Utils::LoadMeshModel(camera_path);
+			// not changing NAME
+			cam_obj.SetModelName("camera" + std::to_string(counter));
+			counter++;
+			scene.AddModel(std::make_shared<MeshModel>(cam_obj));
+			scene.AddCamera(Camera(glm::vec4(0), glm::vec4(0, 0, -1, 0), glm::vec4(0, 1, 0, 0), cam_obj));
+			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
+		}
 
 		if (scene.GetModelCount()) {
 			std::vector<std::shared_ptr<MeshModel>> models = scene.GetModels();
 			int idx = scene.GetActiveModelIndex();
 			std::shared_ptr<MeshModel> model = models[idx];
+			static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, angle = 0.0f, y = 0.0f, z = 0.0f;
 
-			{
-				static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
-				int changed = 0;
-				changed += ImGui::SliderFloat("scale_x", &scale_x, -10.0f, 10.0f);
-				changed += ImGui::SliderFloat("scale_y", &scale_y, -10.0f, 10.0f);
-				changed += ImGui::SliderFloat("scale_z", &scale_z, -10.0f, 10.0f);
-
-				if (changed) {         // Edit 1 float using a slider from 0.0f to 1.0f
-					model->SetTransform("scale");
-					model->SetCordinates({ scale_x, scale_y, scale_z });
+			if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("scale_y", &scale_y, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("scale_z", &scale_z, -20.0f, 20.0f)) 
+			{   
+					SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale");
 					scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
-					renderer.Transform(*model);
-				}
 			}
-			{
-				int changed = 0;
-				static float tr_x = 0.0f , tr_y = 0.0f, tr_z = 0.0f;
-				changed += ImGui::SliderFloat("tr_x", &tr_x, -200.0f, 200.0f);
-				changed += ImGui::SliderFloat("tr_y", &tr_y, -200.0f, 200.0f);
-				changed += ImGui::SliderFloat("tr_z", &tr_z, -200.0f, 200.0f);
 
-				if (changed) {         // Edit 1 float using a slider from 0.0f to 1.0f
-					model->SetTransform("translate");
-					model->SetCordinates({ tr_x, tr_y, tr_z });
-					tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
-					renderer.Transform(*model);
-				}
+			if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
+			{
+					SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate");
+				tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
 			}
-			{
-				int changed = 0;
-				static float angle = 0.0f, y = 0.0f, z = 0.0f;
-				changed += ImGui::SliderFloat("angle", &angle, -200.0f, 200.0f);
 
-				if (changed) {         // Edit 1 float using a slider from 0.0f to 1.0f
-					model->SetTransform("rotate");
-					model->SetCordinates({ angle, y, z });
+			if (ImGui::SliderFloat("angle", &angle, -2.0f, 2.0f)) {
+					SubmitTransform(model, renderer, angle, y, z, "rotate");
 					angle = 0.0f, y = 0.0f, z = 0.0f;
-					renderer.Transform(*model);
-				}
 			}
+
 
 
 			//if () {
@@ -137,7 +133,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 					nfdchar_t *outPath = NULL;
 					nfdresult_t result = NFD_OpenDialog("obj;png,jpg", NULL, &outPath);
 					if (result == NFD_OKAY) {
-						scene.AddModel(std::make_shared<MeshModel>(Utils::LoadMeshModel(outPath)));
+						MeshModel addM = Utils::LoadMeshModel(outPath);
+						scene.AddModel(std::make_shared<MeshModel>(addM));
 						scene.SetActiveModelIndex(scene.GetModelCount() - 1);
 						free(outPath);
 					}
@@ -154,4 +151,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			ImGui::EndMainMenuBar();
 		}
 	}
+}
+
+void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name)
+{
+	model->SetTransform(name);
+	model->SetCordinates({ x, y, z });
+	renderer.Transform(*model, name);
 }

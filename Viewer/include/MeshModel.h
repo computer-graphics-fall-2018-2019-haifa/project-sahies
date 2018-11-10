@@ -20,12 +20,16 @@ private:
 	std::string modelName;
 	glm::vec3 transformCordinates;
 	std::string transformName;
+	glm::mat4x4 scale;
+	glm::mat4x4 translate;
+	glm::mat4x4 rotate;
 
 public:
 	MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, const std::string& modelName = "");
 	virtual ~MeshModel();
+	MeshModel(const MeshModel& model);
 
-	void SetWorldTransformation(const glm::mat4x4& worldTransform);
+	void MeshModel::SetWorldTransformation();
 	const glm::mat4x4& GetWorldTransformation() const;
 
 	const glm::vec4& GetColor() const;
@@ -35,6 +39,10 @@ public:
 	void setVertices(const std::vector<glm::vec3> vertices);
 	void SetTransform(const std::string& name);
 	void SetCordinates(const glm::vec3& cordinates);
+	void SetModelName(const std::string& name);
+	void setMatrix(const glm::mat4 matrix, std::string name);
+	void MeshModel::SetDefatultWorldTransformation();
+
 
 	const std::string& GetModelName();
 	const std::vector<glm::vec3> MeshModel::GetVertices() const;

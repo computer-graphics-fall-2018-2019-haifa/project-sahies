@@ -30,9 +30,13 @@ public:
 	const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const;
 	void AddCamera(const Camera& camera);
 	const int GetCameraCount() const;
+	const std::vector<Camera> Scene::GetCameras() const;
 
 	void SetActiveCameraIndex(int index);
 	const int GetActiveCameraIndex() const;
+	const Camera GetCamera(int index) const;
+	
+
 
 	void SetActiveModelIndex(int index);
 	const int GetActiveModelIndex() const;

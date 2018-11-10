@@ -53,9 +53,11 @@ std::vector<glm::vec3> Utils::Vec4to3Xmat(const std::vector<glm::vec4> vertices)
 
  glm::mat4 Utils::GetMatrix(std::string transformation,float a, float b, float c) 
 {
-	glm::mat4 mat;
+	 glm::mat4 mat, matX, matY, matZ;
 	const float pi = 3.14159265;
-	float theta = pi / 180 * a;
+	float thetaX = pi / 180 * a;
+	float thetaY = pi / 180 * b;
+	float thetaZ = pi / 180 * c;
 
 	if (transformation == "scale") 
 		mat = {
@@ -75,15 +77,29 @@ std::vector<glm::vec3> Utils::Vec4to3Xmat(const std::vector<glm::vec4> vertices)
 		//mat = glm::transpose(mat);
 	}
 
-	else if (transformation  == "rotate") 
-		mat = {
+	else if (transformation == "rotate") {
+		matX = {
 			1 ,0 ,0 ,0,
-			0, cos(theta), -sin(theta), 0,
-			0, sin(theta), cos(theta), 0,
+			0, cos(thetaX), -sin(thetaX), 0,
+			0, sin(thetaX), cos(thetaX), 0,
 			0, 0,0, 1
 		};
-		
+		matY = glm::mat4(
+			cos(thetaY), 0, sin(thetaY), 0,
+			0, 1, 0, 0,
+			-sin(thetaY), 0, cos(thetaY), 0,
+			0, 0, 0, 1
+		);
+		matZ = glm::mat4(
+			cos(thetaZ), -sin(thetaZ), 0, 0,
+			sin(thetaZ), cos(thetaZ), 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+		);
 
+		mat = matX * matY * matX;
+
+	}
 	else 
 		mat = {
 			1, 0, 0, 0,
@@ -95,6 +111,7 @@ std::vector<glm::vec3> Utils::Vec4to3Xmat(const std::vector<glm::vec4> vertices)
 
 
 	return glm::transpose(mat);
+	//return mat;
 }
 
 
