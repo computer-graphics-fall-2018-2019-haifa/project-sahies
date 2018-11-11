@@ -47,20 +47,23 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 		if (ImGui::Button("add camera") || scene.GetCameraCount() == 0) {
-			MeshModel cam_obj = Utils::LoadMeshModel(camera_path);
+			std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
 			// not changing NAME
-			cam_obj.SetModelName("camera" + std::to_string(counter));
+			cam_obj->SetModelName("camera" + std::to_string(counter));
 			counter++;
-			scene.AddModel(std::make_shared<MeshModel>(cam_obj));
-			scene.AddCamera(Camera(glm::vec4(0), glm::vec4(0, 0, -1, 0), glm::vec4(0, 1, 0, 0), cam_obj));
+			scene.AddModel(cam_obj);
+			scene.AddCamera(Camera(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, -5, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 		}
 
-		if (scene.GetModelCount()) {
+		if (scene.GetModelCount() > 1) {
 			std::vector<std::shared_ptr<MeshModel>> models = scene.GetModels();
 			int idx = scene.GetActiveModelIndex();
-			std::shared_ptr<MeshModel> model = models[idx];
-			static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, angle = 0.0f, y = 0.0f, z = 0.0f;
+			/*if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f) 
+				std::shared_ptr<MeshModel> model = models[name];
+			else */
+				std::shared_ptr<MeshModel> model = models[idx];
+			static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f;
 
 			if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("scale_y", &scale_y, -20.0f, 20.0f) ||
@@ -75,12 +78,15 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
 			{
 					SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate");
-				tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
+					tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
 			}
 
-			if (ImGui::SliderFloat("angle", &angle, -2.0f, 2.0f)) {
-					SubmitTransform(model, renderer, angle, y, z, "rotate");
-					angle = 0.0f, y = 0.0f, z = 0.0f;
+			if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
+			{
+					SubmitTransform(model, renderer, x, y, z, "rotate");
+					x = 0.0f, y = 0.0f, z = 0.0f;
 			}
 
 
@@ -156,6 +162,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name)
 {
 	model->SetTransform(name);
-	model->SetCordinates({ x, y, z });
-	renderer.Transform(*model, name);
+	model->SetCordinates({ x, y, z }, name);
+	renderer.SetTransformation(*model);
 }

@@ -14,14 +14,14 @@ public:
 	static glm::vec2 Vec2fFromStream(std::istream& issLine);
 	static MeshModel LoadMeshModel(const std::string& filePath);
 	static glm::vec4 Utils::Vec3to4(const glm::vec3 vertex);
-	static std::vector<glm::vec4> Vec3to4(const std::vector<glm::vec3> vertices, const glm::mat4 matrix = {
+	static std::vector<glm::vec4> Vec3to4Xmat(const std::vector<glm::vec3> vertices, const glm::mat4 matrix = {
 	1, 0, 0, 0,
 	0, 1, 0, 0,
 	0, 0, 1, 0,
 	0, 0, 0, 1,
 		});
-	static glm::vec3 Utils::Vec4to3(const glm::vec4 vertex);
-	static std::vector<glm::vec3> Vec4to3Xmat(const std::vector<glm::vec4> vertices);
+	static glm::vec3 Utils::Vertex4to3(const glm::vec4 vertex);
+	static std::vector<glm::vec3> Vec4to3(const std::vector<glm::vec4> vertices);
 	static glm::mat4 Utils::GetMatrix(std::string transformation, float a, float b, float c) ;
 
 	// Add here more static utility functions...

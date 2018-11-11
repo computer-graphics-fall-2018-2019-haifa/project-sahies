@@ -39,9 +39,9 @@ public:
 	void SetViewport(int viewportWidth, int viewportHeight, int viewportX = 0, int viewportY = 0);
 
 	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
-	void Renderer::Transform(MeshModel& model,std::string& name);
+	void Renderer::SetTransformation(MeshModel& model);
 	void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c);
-	std::vector<glm::vec3> Renderer::TransformMUL(MeshModel& model, glm::mat4 matrix);
+	std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
 
 	// Add more methods/functionality as needed...
 };

@@ -24,7 +24,7 @@ glm::vec4 Utils::Vec3to4(const glm::vec3 vertex)
 	return glm::vec4(vertex[0], vertex[1], vertex[2], 1.0f);
 }
 
-std::vector<glm::vec4> Utils::Vec3to4(std::vector<glm::vec3> vertices, glm::mat4 matrix)
+std::vector<glm::vec4> Utils::Vec3to4Xmat(std::vector<glm::vec3> vertices, glm::mat4 matrix)
 {
 	std::vector<glm::vec4> vertices_tmp;
 
@@ -35,17 +35,17 @@ std::vector<glm::vec4> Utils::Vec3to4(std::vector<glm::vec3> vertices, glm::mat4
 
 }
 
-glm::vec3 Utils::Vec4to3(const glm::vec4 vertex)
+glm::vec3 Utils::Vertex4to3(const glm::vec4 vertex)
 {
 	return glm::vec3(vertex[0] / vertex[3], vertex[1] / vertex[3], vertex[2] / vertex[3]);
 }
 
-std::vector<glm::vec3> Utils::Vec4to3Xmat(const std::vector<glm::vec4> vertices)
+std::vector<glm::vec3> Utils::Vec4to3(const std::vector<glm::vec4> vertices)
 {
 	std::vector<glm::vec3> vertices_tmp;
 
 	for (glm::vec4 vertex : vertices) 
-		vertices_tmp.push_back(Utils::Vec4to3(vertex));
+		vertices_tmp.push_back(Utils::Vertex4to3(vertex));
 	
 	return vertices_tmp;
 }

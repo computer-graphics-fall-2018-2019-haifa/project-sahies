@@ -14,15 +14,15 @@
 class Camera: public MeshModel
 {
 private:
-	glm::mat4x4 viewTransformation;
-	glm::mat4x4 projectionTransformation;
+	glm::mat4 viewTransformation;
+	glm::mat4 projectionTransformation;
 	float zoom;
 
 public:
-	Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up, MeshModel& model);
+	Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, MeshModel& model);
 	~Camera();
 
-	void SetCameraLookAt(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up);
+	void SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up);
 
 	void SetOrthographicProjection(
 		const float height,
@@ -39,6 +39,6 @@ public:
 	void SetZoom(const float zoom);
 
 
-	const glm::mat4x4 GetViewTransformation() const;
+	const glm::mat4 GetViewTransformation() const;
 	// Add more methods/functionality as needed...
 };
