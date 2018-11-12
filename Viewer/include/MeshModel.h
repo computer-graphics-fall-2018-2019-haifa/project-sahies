@@ -13,25 +13,24 @@ class MeshModel
 {
 private:
 	std::vector<Face> faces;
-	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> normals;
-	glm::mat4x4 worldTransform;
 	glm::vec4 color;
 	std::string modelName;
-	glm::vec3 scaleCordinates;
-	glm::vec3 rotateCordinates;
-	glm::vec3 translateCordinates;
 	std::string transformName;
-	glm::mat4x4 scale;
-	glm::mat4x4 translate;
-	glm::mat4x4 rotate;
+	std::vector<glm::vec3> cordinatesTransformations;
+
+protected:
+	glm::mat4x4 worldTransform;
+	std::vector<glm::mat4> matTransformations;
+	std::vector<glm::vec3> vertices;
+
 
 public:
 	MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, const std::string& modelName = "");
 	virtual ~MeshModel();
 	MeshModel(const MeshModel& model);
 
-	void MeshModel::SetWorldTransformation();
+	
 	const glm::mat4x4& GetWorldTransformation() const;
 
 	const glm::vec4& GetColor() const;
@@ -42,8 +41,9 @@ public:
 	void SetCordinates(const glm::vec3& cordinates, std::string& name);
 	void SetModelName(const std::string& name);
 	void setMatrix(const glm::mat4 matrix, std::string name);
-
+	virtual void MeshModel::SetWorldTransformation();
 	const glm::vec3 MeshModel::GetCordinates(std::string& name) const;
+
 	const std::string& GetModelName();
 	const std::vector<glm::vec3> MeshModel::GetVertices() const;
 	const std::vector<Face> MeshModel::GetFaces() const;

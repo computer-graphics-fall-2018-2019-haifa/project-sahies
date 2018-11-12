@@ -48,22 +48,21 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 		if (ImGui::Button("add camera") || scene.GetCameraCount() == 0) {
 			std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
-			// not changing NAME
 			cam_obj->SetModelName("camera" + std::to_string(counter));
 			counter++;
 			scene.AddModel(cam_obj);
-			scene.AddCamera(Camera(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, -5, 0), *cam_obj));
+			scene.AddCamera(Camera(glm::vec3(2,0,0), glm::vec3(0, 2, 0), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 		}
 
-		if (scene.GetModelCount() > 1) {
-			std::vector<std::shared_ptr<MeshModel>> models = scene.GetModels();
-			int idx = scene.GetActiveModelIndex();
+			std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
+			std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
 			/*if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f) 
 				std::shared_ptr<MeshModel> model = models[name];
 			else */
-				std::shared_ptr<MeshModel> model = models[idx];
-			static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f;
+			static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f,
+			 zoom, left, right,bottom,top,zNear,zFar,fovy,aspect;
+			std::string projectionType;
 
 			if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("scale_y", &scale_y, -20.0f, 20.0f) ||
@@ -91,12 +90,70 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 
-			//if () {
-			//	scene.SetActiveModelIndex(index_by_name);   // TODO change model
+			Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
+			camera.SetEyePlace();
+			/*if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f)
+				std::shared_ptr<MeshModel> model = models[name];
+			else */
+			static float CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f, CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
 
-			//}
+			if (ImGui::SliderFloat("CAMscale_x", &CAMscale_x, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("CAMscale_y", &CAMscale_y, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("CAMscale_z", &CAMscale_z, -20.0f, 20.0f))
+			{
+				SubmitTransform(model, renderer, CAMscale_x, CAMscale_y, CAMscale_z, "scale");
+				CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f;
+			}
 
-		}
+			if (ImGui::SliderFloat("CAMtr_x", &CAMtr_x, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("CAMtr_y", &CAMtr_y, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("CAMtr_z", &CAMtr_z, -20.0f, 20.0f))
+			{
+				//SubmitTransform(model, renderer, CAMtr_x, CAMtr_y, CAMtr_z, "translate");
+				camera.SetCamTransformation("translate", { CAMtr_x, CAMtr_y, CAMtr_z });
+				CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
+			}
+
+
+			if (ImGui::SliderFloat("CAM_x", &CAM_x, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("CAM_y", &CAM_y, -20.0f, 20.0f) ||
+				ImGui::SliderFloat("CAM_z", &CAM_z, -20.0f, 20.0f))
+			{
+				SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate");
+				camera.SetCamTransformation("translate", { CAM_x, CAM_y, CAM_z });
+				CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
+			}
+
+			ImGui::SliderFloat("zoom", &zoom, -20.0f, 20.0f);
+			ImGui::SliderFloat("left", &left, -20.0f, 20.0f);
+			ImGui::SliderFloat("right", &right, -20.0f, 20.0f);
+			ImGui::SliderFloat("bottom", &bottom, -20.0f, 20.0f); 
+			ImGui::SliderFloat("top", &top, -20.0f, 20.0f);
+			ImGui::SliderFloat("zNear", &zNear, -20.0f, 20.0f);
+			ImGui::SliderFloat("zFar", &zFar, -20.0f, 20.0f);
+			ImGui::SliderFloat("fovy", &fovy, -20.0f, 20.0f);
+			ImGui::SliderFloat("aspect", &aspect, -20.0f, 20.0f);
+
+			if (ImGui::Button("Perspective")) {
+				camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
+			}
+
+			if (ImGui::Button("Orthographic")) {
+				camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+			}
+
+
+			
+			int idx = 0;
+			for (auto model : models) {
+				std::vector<char> cstr(model->GetModelName().c_str(), model->GetModelName().c_str() + model->GetModelName().size() + 1);
+				if (ImGui::Button(model->GetModelName().c_str()))
+				{
+					scene.SetActiveModelIndex(idx);
+					idx++;
+				}
+			}
+
 
 
 
@@ -165,3 +222,5 @@ void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float
 	model->SetCordinates({ x, y, z }, name);
 	renderer.SetTransformation(*model);
 }
+
+

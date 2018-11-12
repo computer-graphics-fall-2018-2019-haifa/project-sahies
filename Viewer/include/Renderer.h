@@ -40,8 +40,9 @@ public:
 
 	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 	void Renderer::SetTransformation(MeshModel& model);
-	void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c);
+	void Renderer::DrawTriangle(std::vector<glm::vec3> triangle);
 	std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
+	std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec);
 
 	// Add more methods/functionality as needed...
 };

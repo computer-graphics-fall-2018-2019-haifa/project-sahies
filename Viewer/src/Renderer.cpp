@@ -148,45 +148,53 @@ void Renderer::Render(const Scene& scene)
 {
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
-	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
 
 	// X-line Y-line
 	bresenham_line(0, y_center, viewportWidth, y_center);
 	bresenham_line(x_center, 0, x_center, viewportHeight);
 
-	if (scene.GetModelCount() > 1) {  
+	if (scene.GetModelCount()) {  // maybe > 1?
 
-		std::vector<std::shared_ptr<MeshModel>> models = scene.GetModels();
 		Camera active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
+		active_camera.SetWorldTransformation();
 
-		for (auto model : models) {
+		for (auto model : scene.GetModels()) {
 
-		/*	if (active_camera.GetModelName() == model->GetModelName())
-				continue;*/
+			//if (active_camera.GetModelName() == model->GetModelName())
+			//	continue;
 
 			model->SetWorldTransformation();
-			//std::vector<glm::vec3> new_vec = TransformMUL(*model, active_camera.GetViewTransformation() * model->GetWorldTransformation());
-			std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(), active_camera.GetViewTransformation() * model->GetWorldTransformation());
-			std::vector<Face> faces = model->GetFaces();
+			//std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(), active_camera.GetProjection() * active_camera.GetViewTransformation() *  active_camera.GetWorldTransformation() *  model->GetWorldTransformation());
+			std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(),  active_camera.GetViewTransformation() *  active_camera.GetWorldTransformation() *  model->GetWorldTransformation());
 
-			for (Face& face : faces) {
-				int a = face.GetVertexIndex(0) - 1;
-				int b = face.GetVertexIndex(1) - 1;
-				int c = face.GetVertexIndex(2) - 1;
-				DrawTriangle(new_vec[a] + center_shift, new_vec[b] + center_shift, new_vec[c] + center_shift);
-			}
+			for (auto face : model->GetFaces())
+				DrawTriangle(FromVecToTriangle(face, new_vec));
+			
 
 		}
 	}
 }
 
 
-void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c)
+void Renderer::DrawTriangle(std::vector<glm::vec3> triangle)
 	{
-		bresenham_line(a.x, a.y, b.x, b.y);
-		bresenham_line(a.x, a.y, c.x, c.y);
-		bresenham_line(b.x, b.y, c.x, c.y);
+		bresenham_line(triangle[0].x, triangle[0].y, triangle[1].x, triangle[1].y);
+		bresenham_line(triangle[0].x, triangle[0].y, triangle[2].x, triangle[2].y);
+		bresenham_line(triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y);
 	}
+
+std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec)
+{
+	int x_center = viewportWidth / 2;
+	int y_center = viewportHeight / 2;
+	int a = face.GetVertexIndex(0) - 1;
+	int b = face.GetVertexIndex(1) - 1;
+	int c = face.GetVertexIndex(2) - 1;
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
+
+	return { new_vec[a] + center_shift, new_vec[b] + center_shift, new_vec[c] + center_shift };
+}
+
 
 
 
