@@ -200,6 +200,7 @@ void Renderer::Render(const Scene& scene)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 		bresenham_line(vertices[a].x, vertices[a].y, vertices[b].x, vertices[b].y, glm::vec3(0, 0, 0));
 		bresenham_line(vertices[a].x, vertices[a].y, vertices[c].x, vertices[c].y, glm::vec3(0, 0, 0));
 		bresenham_line(vertices[b].x, vertices[b].y, vertices[c].x, vertices[c].y, glm::vec3(0, 0, 0));
@@ -210,6 +211,13 @@ void Renderer::DrawTriangle(std::vector<glm::vec3> triangle)
 		bresenham_line(triangle[0].x, triangle[0].y, triangle[2].x, triangle[2].y);
 		bresenham_line(triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y);
 >>>>>>> 6eafb69db38614fcb94b865b4543400e6465d216
+=======
+void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c)
+	{
+		bresenham_line(a.x, a.y, b.x, b.y);
+		bresenham_line(a.x, a.y, c.x, c.y);
+		bresenham_line(b.x, b.y, c.x, c.y);
+>>>>>>> parent of 6eafb69... Added basic projections + fix lookAt (still notW)
 =======
 void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c)
 	{
