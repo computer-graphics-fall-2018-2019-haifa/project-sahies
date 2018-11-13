@@ -173,7 +173,7 @@ void Renderer::Render(const Scene& scene)
 
 			for (auto face : model->GetFaces()) {
 				DrawTriangle(FromVecToTriangle(face, new_vec));
-				DrawNormals(face, new_vec_n,model->GetVertices());
+				DrawNormals(face, new_vec_n, new_vec);
 			}
 
 		}
