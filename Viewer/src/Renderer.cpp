@@ -15,6 +15,9 @@
 // TODO ^
 #define INDEX(width,x,y,c) ((x)+(y)*(width))*3+(c)
 
+
+
+
 Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int viewportY) :
 	colorBuffer(nullptr),
 	zBuffer(nullptr)
@@ -24,47 +27,49 @@ Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int vie
 }
 
 
+template <class T>
+void swap(T& x, T& y)
+{
+	T temp;
+	temp = x;
+	x = y;
+	y = temp;
+}
 
-void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) {
-	// Bresenham's line algorithm
-	const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
+void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2,const glm::vec3& color) {
 
-	if (steep)
+	bool ismPoz = (fabs(y2 - y1) > fabs(x2 - x1));
+	if (ismPoz)
 	{
-		std::swap(x1, y1);
-		std::swap(x2, y2);
+		swap(x1, y1);
+		swap(x2, y2);
 	}
 
 	if (x1 > x2)
 	{
-		std::swap(x1, x2);
-		std::swap(y1, y2);
+		swap(x1, x2);
+		swap(y1, y2);
 	}
 
-	const float dx = x2 - x1;
-	const float dy = fabs(y2 - y1);
-
-	float error = dx / 2.0f;
-	const int ystep = (y1 < y2) ? 1 : -1;
-	int y = (int)y1;
-
-	const int maxX = (int)x2;
-
-	for (int x = (int)x1; x < maxX; x++)
+	GLfloat dx = (x2 - x1), dy = fabs(y2 - y1), error = dx / 2.0f;
+	int yIdx = (int)y1, x2int = (int)x2;
+	for (int xIdx = (int)x1; xIdx < x2int; xIdx++)
 	{
-		if (steep)
+		if (ismPoz)
 		{
-			putPixel(y, x, glm::vec3(0,0,0));
+			putPixel(yIdx, xIdx, color);
 		}
 		else
 		{
-			putPixel(x, y, glm::vec3(0, 0, 0));
+			putPixel(xIdx, yIdx, color);
 		}
-
 		error -= dy;
 		if (error < 0)
 		{
-			y += ystep;
+			if (y1 < y2)
+				yIdx++;
+			else
+				yIdx--;
 			error += dx;
 		}
 	}
@@ -154,8 +159,8 @@ void Renderer::Render(const Scene& scene)
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
 
-	bresenham_line(0,y_center, viewportWidth, y_center);
-	bresenham_line(x_center, 0, x_center, viewportHeight);
+	bresenham_line(0,y_center, viewportWidth, y_center, glm::vec3(0, 0, 0));
+	bresenham_line(x_center, 0, x_center, viewportHeight, glm::vec3(0, 0, 0));
 
 	if (scene.GetModelCount()) {
 
@@ -183,9 +188,9 @@ void Renderer::DrawTriangle(MeshModel& model)
 		int b = face.GetVertexIndex(1) - 1;
 		int c = face.GetVertexIndex(2) - 1;
 
-		bresenham_line(vertices[a].x, vertices[a].y, vertices[b].x, vertices[b].y);
-		bresenham_line(vertices[a].x, vertices[a].y, vertices[c].x, vertices[c].y);
-		bresenham_line(vertices[b].x, vertices[b].y, vertices[c].x, vertices[c].y);
+		bresenham_line(vertices[a].x, vertices[a].y, vertices[b].x, vertices[b].y, glm::vec3(0, 0, 0));
+		bresenham_line(vertices[a].x, vertices[a].y, vertices[c].x, vertices[c].y, glm::vec3(0, 0, 0));
+		bresenham_line(vertices[b].x, vertices[b].y, vertices[c].x, vertices[c].y, glm::vec3(0, 0, 0));
 	}
 
 

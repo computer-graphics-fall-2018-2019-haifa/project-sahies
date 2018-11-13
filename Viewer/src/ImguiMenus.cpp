@@ -35,6 +35,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
 		static int counter = 0;
+		static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
 		
 
 		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
@@ -48,7 +49,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			std::shared_ptr<MeshModel> model = models[idx];
 
 			{
-				static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
+				
 				int changed = 0;
 				changed += ImGui::SliderFloat("scale_x", &scale_x, -10.0f, 10.0f);
 				changed += ImGui::SliderFloat("scale_y", &scale_y, -10.0f, 10.0f);

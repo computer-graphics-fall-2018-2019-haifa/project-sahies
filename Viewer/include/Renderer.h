@@ -38,7 +38,7 @@ public:
 	void ClearColorBuffer(const glm::vec3& color);
 	void SetViewport(int viewportWidth, int viewportHeight, int viewportX = 0, int viewportY = 0);
 
-	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, const glm::vec3& color);
 	void Renderer::Transform(MeshModel& model);
 	void Renderer::DrawTriangle(MeshModel& model);
 
