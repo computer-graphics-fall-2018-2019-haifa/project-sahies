@@ -5,18 +5,26 @@
 
 /*
  * Camera class. This class takes care of all the camera transformations and manipulations.
- *
- * Implementation suggestion:
- * --------------------------
- * Make the Camera class be a subclass of MeshModel, so you can easily and elegantly render 
- * the cameras you have added to the scene.
  */
+
 class Camera: public MeshModel
 {
 private:
 	glm::mat4 viewTransformation;
 	glm::mat4 projectionTransformation;
 	float zoom;
+	float left;
+	float right;
+	float bottom;
+	float top;
+	float zNear;
+	float zFar;
+	float fovy;
+	float aspect;
+	std::string projectionType;
+	glm::vec3 eye;
+	glm::vec3 at;
+    glm::vec3 up;
 
 public:
 	Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, MeshModel& model);
@@ -38,7 +46,10 @@ public:
 
 	void SetZoom(const float zoom);
 
-
-	const glm::mat4 GetViewTransformation() const;
+	void SetCamTransformation();
+	void SetWorldTransformation();
+	const glm::mat4 GetViewTransformation();
+	const glm::mat4 GetProjection() const;
+	void SetEyePlace();
 	// Add more methods/functionality as needed...
 };

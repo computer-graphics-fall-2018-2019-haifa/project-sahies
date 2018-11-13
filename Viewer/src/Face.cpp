@@ -42,10 +42,20 @@ Face::~Face()
 
 }
 
+//const int Face::GetVertexIndex(int index, std::string name)
+//{	
+//	if (name == "verices")
+//		return vertexIndices[index];
+//	else
+//		return normalIndices[index];
+//}
+
 const int Face::GetVertexIndex(int index)
 {
-	return vertexIndices[index];
+		return vertexIndices[index];
+
 }
+
 
 const int Face::GetNormalIndex(int index)
 {
