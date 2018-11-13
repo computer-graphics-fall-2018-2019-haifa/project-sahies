@@ -1,13 +1,12 @@
 #include "Scene.h"
 #include "MeshModel.h"
 #include <string>
+#include "Camera.h"
 
 Scene::Scene() :
 	activeCameraIndex(0),
 	activeModelIndex(0)
-{
-
-}
+{}
 
 void Scene::AddModel(const std::shared_ptr<MeshModel>& model)
 {
@@ -24,9 +23,19 @@ const int Scene::GetModelCount() const
 	return models.size();
 }
 
+const std::shared_ptr<MeshModel> Scene::GetModel(int index) const
+{
+	return models[index];
+}
+
 const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const
 {
 	return models;
+}
+
+const std::vector<Camera> Scene::GetCameras() const
+{
+	return cameras;
 }
 
 void Scene::AddCamera(const Camera& camera)
@@ -52,6 +61,14 @@ const int Scene::GetActiveCameraIndex() const
 {
 	return activeCameraIndex;
 }
+
+const Camera Scene::GetCamera(int index) const
+{	
+	if (cameras.size() > index)
+		return cameras[index];
+}
+
+
 
 void Scene::SetActiveModelIndex(int index)
 {
