@@ -256,9 +256,9 @@ void Renderer::DrawNormals(Face face, std::vector<glm::vec3> normals, std::vecto
 		vertices[a] += center_shift;
 		vertices[b] += center_shift;
 		vertices[c] += center_shift;
-		vertices[a_n] += center_shift;
-		vertices[b_n] += center_shift;
-		vertices[c_n] += center_shift;
+		normals[a_n] += center_shift;
+		normals[b_n] += center_shift;
+		normals[c_n] += center_shift;
 
 		bresenham_line(vertices[a].x, vertices[a].y, normals[a_n].x, normals[a_n].y);
 		bresenham_line(vertices[b].x, vertices[b].y, normals[b_n].x, normals[b_n].y);
