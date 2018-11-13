@@ -49,8 +49,11 @@ public:
 	std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec);
 >>>>>>> 6eafb69db38614fcb94b865b4543400e6465d216
+=======
+>>>>>>> parent of 6eafb69... Added basic projections + fix lookAt (still notW)
 =======
 >>>>>>> parent of 6eafb69... Added basic projections + fix lookAt (still notW)
 =======
