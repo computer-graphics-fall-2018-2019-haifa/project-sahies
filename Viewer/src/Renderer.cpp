@@ -219,6 +219,7 @@ void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c)
 		bresenham_line(b.x, b.y, c.x, c.y);
 >>>>>>> parent of 6eafb69... Added basic projections + fix lookAt (still notW)
 =======
+=======
 void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c)
 	{
 		bresenham_line(a.x, a.y, b.x, b.y);
