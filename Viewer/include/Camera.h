@@ -46,9 +46,9 @@ public:
 
 	void SetZoom(const float zoom);
 
-	void SetCamTransformation(std::string name, glm::vec3 cordinates);
+	void SetCamTransformation();
 	void SetWorldTransformation();
-	const glm::mat4 GetViewTransformation() const;
+	const glm::mat4 GetViewTransformation();
 	const glm::mat4 GetProjection() const;
 	void SetEyePlace();
 	// Add more methods/functionality as needed...

@@ -14,6 +14,7 @@ private:
 public:
 	Face(std::istream& issLine);
 	virtual ~Face();
+	//const int Face::GetVertexIndex(int index, std::string name);
 	const int Face::GetVertexIndex(int index);
 	const int Face::GetNormalIndex(int index);
 	const int Face::GetTextureIndex(int index);

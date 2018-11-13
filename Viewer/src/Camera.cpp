@@ -30,25 +30,22 @@ Camera::~Camera()
 
 void Camera::SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up)
 {
-	//std::string translate = "translate";
-	//std::string rotate = "rotate";
-	//glm::vec3 new_eye = Utils::GetMatrix("translate", this->GetCordinates(translate)) * glm::vec4(eye[0], eye[1], eye[2], 1);
-	//glm::vec3 new_up = Utils::GetMatrix("rotate", this->GetCordinates(rotate)) * glm::vec4(up[0], up[1], up[2], 1);
 
 	auto z = glm::normalize(eye - at);
 	auto x = glm::normalize(glm::cross(up, z));
-	auto y = glm::normalize(glm::cross(x, z));
+	auto y = glm::normalize(glm::cross(z, x));
 	
 
 	glm::vec4 z4(z[0], z[1], z[2], 0);
 	glm::vec4 x4(x[0], x[1], x[2], 0);
 	glm::vec4 y4(y[0], y[1], y[2], 0);
 	glm::vec4 t = glm::vec4(0.0, 0.0, 0.0, 1.0);
+
 	glm::mat4 c = glm::mat4(x4, y4, z4, t);
 
 
-	glm::mat4 translate_eye = Utils::GetMatrix("translate", -1*(eye.x), -1*(eye.y), -1*(eye.z));
-	viewTransformation = c * translate_eye;
+	glm::mat4 translate_eye = Utils::GetMatrix("translate", -1*(eye.x), -1*(eye.y), -1*( eye.z));
+	viewTransformation = c * glm::transpose(translate_eye);
 
 	//glm::mat4 c = {
 	//	x.x, x.y, x.z, 0,
@@ -62,17 +59,18 @@ void Camera::SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const gl
 
 }
 
-void Camera::SetCamTransformation(std::string name, glm::vec3 cordinates)
+void Camera::SetCamTransformation()
 {
-	if (name == "rotate") {
-		this->eye = Utils::GetMatrix("rotate", this->GetCordinates(name)) * glm::vec4(eye[0], eye[1], eye[2], 1);
-		SetCameraLookAt(eye, at, up);
-	}
-	else {
-		this->up = Utils::GetMatrix("translate", this->GetCordinates(name)) * glm::vec4(up[0], up[1], up[2], 1);
-		SetCameraLookAt(eye, at, up);
-	}
+	std::string rt = "rotate";
+	std::string tr = "translate";
+
+	this->eye = Utils::GetMatrix("translate", this->GetCordinates(tr)) * glm::vec4(eye[0], eye[1], eye[2], 1);
+	this->up = Utils::GetMatrix("rotate", this->GetCordinates(rt)) * glm::vec4(up[0], up[1], up[2], 1);
+	this->at = Utils::GetMatrix("translate", this->GetCordinates(tr)) * glm::vec4(up[0], up[1], up[2], 1);
+	
+	SetCameraLookAt(eye, at, up);
 }
+
 
 void Camera::SetWorldTransformation()
 {
@@ -117,8 +115,9 @@ void Camera::SetZoom(const float zoom)
 
 }
 
-const glm::mat4x4 Camera::GetViewTransformation() const
+const glm::mat4x4 Camera::GetViewTransformation() 
 {
+	//SetCameraLookAt(eye, at, up);
 	return viewTransformation;
 }
 
@@ -131,5 +130,5 @@ const glm::mat4 Camera::GetProjection() const
 
 void Camera::SetEyePlace() 
 {
-	this->vertices = Utils::Vec4to3(Utils::Vec3to4Xmat(this->GetVertices(), Utils::GetMatrix("translate", glm::vec3(0))));
+	this->vertices = Utils::Vec4to3(Utils::Vec3to4Xmat(this->GetVertices(), Utils::GetMatrix("translate", glm::vec3(2,0,0))));
 }

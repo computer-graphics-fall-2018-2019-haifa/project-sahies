@@ -51,7 +51,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			cam_obj->SetModelName("camera" + std::to_string(counter));
 			counter++;
 			scene.AddModel(cam_obj);
-			scene.AddCamera(Camera(glm::vec3(2,0,0), glm::vec3(0, 2, 0), glm::vec3(0, 1, 0), *cam_obj));
+			scene.AddCamera(Camera(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 		}
 
@@ -68,7 +68,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("scale_y", &scale_y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("scale_z", &scale_z, -20.0f, 20.0f)) 
 			{   
-					SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale");
+					SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object");
 					scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
 			}
 
@@ -76,7 +76,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
 			{
-					SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate");
+					SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object");
 					tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
 			}
 
@@ -84,7 +84,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
 			{
-					SubmitTransform(model, renderer, x, y, z, "rotate");
+					SubmitTransform(model, renderer, x, y, z, "rotate",  "object");
 					x = 0.0f, y = 0.0f, z = 0.0f;
 			}
 
@@ -101,7 +101,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("CAMscale_y", &CAMscale_y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("CAMscale_z", &CAMscale_z, -20.0f, 20.0f))
 			{
-				SubmitTransform(model, renderer, CAMscale_x, CAMscale_y, CAMscale_z, "scale");
+				SubmitTransform(model, renderer, CAMscale_x, CAMscale_y, CAMscale_z, "scale", "world");
 				CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f;
 			}
 
@@ -109,8 +109,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("CAMtr_y", &CAMtr_y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("CAMtr_z", &CAMtr_z, -20.0f, 20.0f))
 			{
-				//SubmitTransform(model, renderer, CAMtr_x, CAMtr_y, CAMtr_z, "translate");
-				camera.SetCamTransformation("translate", { CAMtr_x, CAMtr_y, CAMtr_z });
+				SubmitTransform(model, renderer, CAMtr_x, CAMtr_y, CAMtr_z, "translate", "world");
 				CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
 			}
 
@@ -119,8 +118,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				ImGui::SliderFloat("CAM_y", &CAM_y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("CAM_z", &CAM_z, -20.0f, 20.0f))
 			{
-				SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate");
-				camera.SetCamTransformation("translate", { CAM_x, CAM_y, CAM_z });
+				SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate", "world");
 				CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
 			}
 
@@ -216,11 +214,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	}
 }
 
-void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name)
+void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name, std::string genreTransformation)
 {
 	model->SetTransform(name);
 	model->SetCordinates({ x, y, z }, name);
-	renderer.SetTransformation(*model);
+	renderer.SetTransformation(*model, genreTransformation);
 }
 
 

@@ -37,12 +37,15 @@ public:
 	void SwapBuffers();
 	void ClearColorBuffer(const glm::vec3& color);
 	void SetViewport(int viewportWidth, int viewportHeight, int viewportX = 0, int viewportY = 0);
-
+	void DrawNormals(Face face, std::vector<glm::vec3> normals, std::vector<glm::vec3>  vertices);
 	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
-	void Renderer::SetTransformation(MeshModel& model);
+	void Renderer::SetTransformation(MeshModel& model, std::string genreTransformation);
 	void Renderer::DrawTriangle(std::vector<glm::vec3> triangle);
 	std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
+	//std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec, std::string name);
+	void Renderer::DrawCube(std::shared_ptr<MeshModel>& model);
 	std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec);
+
 
 	// Add more methods/functionality as needed...
 };

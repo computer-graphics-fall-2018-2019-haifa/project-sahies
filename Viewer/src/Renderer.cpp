@@ -128,12 +128,12 @@ void Renderer::SetViewport(int viewportWidth, int viewportHeight, int viewportX,
 	createOpenGLBuffer();
 }
 
-void Renderer::SetTransformation(MeshModel& model)
+void Renderer::SetTransformation(MeshModel& model, std::string genreTransformation)
 {
 	std::string transform = model.GetTransform();
 	glm::vec3 cordinates = model.GetCordinates(transform);
 	glm::mat4 matrix = Utils::GetMatrix(transform, cordinates.x, cordinates.y, cordinates.z);
-	model.setMatrix(matrix, transform);
+	model.setMatrix(matrix, transform, genreTransformation);
 }
 
 
@@ -156,6 +156,7 @@ void Renderer::Render(const Scene& scene)
 	if (scene.GetModelCount()) {  // maybe > 1?
 
 		Camera active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
+		active_camera.SetCamTransformation();
 		active_camera.SetWorldTransformation();
 
 		for (auto model : scene.GetModels()) {
@@ -163,18 +164,41 @@ void Renderer::Render(const Scene& scene)
 			//if (active_camera.GetModelName() == model->GetModelName())
 			//	continue;
 
+			model->SetObjectTransformation();
 			model->SetWorldTransformation();
-			//std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(), active_camera.GetProjection() * active_camera.GetViewTransformation() *  active_camera.GetWorldTransformation() *  model->GetWorldTransformation());
-			std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(),  active_camera.GetViewTransformation() *  active_camera.GetWorldTransformation() *  model->GetWorldTransformation());
+			std::vector<glm::vec3> new_vec_n = VerticesXmat(model->GetNormals(),  model->GetObjectTransformation());
+			std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(), model->GetObjectTransformation());
+			//std::vector<glm::vec3> new_vec = VerticesXmat(model->GetVertices(), glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation());
+			//DrawCube(model);
 
-			for (auto face : model->GetFaces())
+			for (auto face : model->GetFaces()) {
 				DrawTriangle(FromVecToTriangle(face, new_vec));
-			
+				DrawNormals(face, new_vec_n,model->GetVertices());
+			}
 
 		}
 	}
 }
 
+
+void Renderer::DrawCube(std::shared_ptr<MeshModel>& model)
+{
+	std::map<std::string, glm::vec3> cube =model->GetCube();
+	bresenham_line(cube["fbl"].x, cube["fbl"].y, cube["fbr"].x, cube["fbr"].y);
+	bresenham_line(cube["fbl"].x, cube["fbl"].y, cube["ftr"].x, cube["ftr"].y);
+	bresenham_line(cube["ftr"].x, cube["ftr"].y, cube["ftl"].x, cube["ftl"].y);
+	bresenham_line(cube["ftl"].x, cube["ftl"].y, cube["fbl"].x, cube["fbl"].y);
+
+	bresenham_line(cube["bbl"].x, cube["bbl"].y, cube["bbr"].x, cube["bbr"].y);
+	bresenham_line(cube["bbr"].x, cube["bbr"].y, cube["btr"].x, cube["btr"].y);
+	bresenham_line(cube["btr"].x, cube["btr"].y, cube["btl"].x, cube["btl"].y);
+	bresenham_line(cube["btl"].x, cube["btl"].y, cube["bbl"].x, cube["bbl"].y);
+
+	bresenham_line(cube["fbl"].x, cube["fbl"].y, cube["bbl"].x, cube["bbl"].y);
+	bresenham_line(cube["fbr"].x, cube["fbr"].y, cube["bbr"].x, cube["bbr"].y);
+	bresenham_line(cube["ftl"].x, cube["ftl"].y, cube["btl"].x, cube["btl"].y);
+	bresenham_line(cube["ftr"].x, cube["ftr"].y, cube["btr"].x, cube["btr"].y);
+}
 
 void Renderer::DrawTriangle(std::vector<glm::vec3> triangle)
 	{
@@ -183,19 +207,63 @@ void Renderer::DrawTriangle(std::vector<glm::vec3> triangle)
 		bresenham_line(triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y);
 	}
 
+//std::vector<glm::vec3> Renderer::FromVecToPoint(Face& face, std::vector<glm::vec3>& new_vec, std::string name)
+//{
+//	
+//	int x_center = viewportWidth / 2;
+//	int y_center = viewportHeight / 2;
+//	int a = face.GetVertexIndex(0, name) - 1;
+//	int b = face.GetVertexIndex(1, name) - 1;
+//	int c = face.GetVertexIndex(2, name) - 1;
+//
+//
+//	new_vec[a] += glm::normalize(normal);
+//	new_vec[b] += glm::normalize(normal);
+//	new_vec[c] += glm::normalize(normal);
+//
+//	return { new_vec[a], new_vec[b] ,new_vec[c] };
+//
+//}
+
+
 std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec)
 {
+	
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
 	int a = face.GetVertexIndex(0) - 1;
 	int b = face.GetVertexIndex(1) - 1;
 	int c = face.GetVertexIndex(2) - 1;
+
 	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
 
 	return { new_vec[a] + center_shift, new_vec[b] + center_shift, new_vec[c] + center_shift };
+	//return { new_vec[a], new_vec[b] , new_vec[c] };
 }
 
+void Renderer::DrawNormals(Face face, std::vector<glm::vec3> normals, std::vector<glm::vec3>  vertices)
+{
+		int x_center = viewportWidth / 2;
+		int y_center = viewportHeight / 2;
+		int a = face.GetVertexIndex(0) - 1;
+		int b = face.GetVertexIndex(1) - 1;
+		int c = face.GetVertexIndex(2) - 1;
+		int a_n = face.GetNormalIndex(0) - 1;
+		int b_n = face.GetNormalIndex(1) - 1;
+		int c_n = face.GetNormalIndex(2) - 1;
+		glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
 
+		vertices[a] += center_shift;
+		vertices[b] += center_shift;
+		vertices[c] += center_shift;
+		vertices[a_n] += center_shift;
+		vertices[b_n] += center_shift;
+		vertices[c_n] += center_shift;
+
+		bresenham_line(vertices[a].x, vertices[a].y, normals[a_n].x, normals[a_n].y);
+		bresenham_line(vertices[b].x, vertices[b].y, normals[b_n].x, normals[b_n].y);
+		bresenham_line(vertices[c].x, vertices[c].y, normals[c_n].x, normals[c_n].y);
+}
 
 
 //##############################
