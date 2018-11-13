@@ -23,7 +23,6 @@ public:
 	static glm::vec3 Utils::Vertex4to3(const glm::vec4 vertex);
 	static std::vector<glm::vec3> Vec4to3(const std::vector<glm::vec4> vertices);
 	static glm::mat4 Utils::GetMatrix(std::string transformation, float a, float b, float c) ;
-	static glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates);
 
 	// Add here more static utility functions...
 	// For example:

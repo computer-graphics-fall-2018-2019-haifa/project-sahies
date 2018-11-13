@@ -23,11 +23,6 @@ const int Scene::GetModelCount() const
 	return models.size();
 }
 
-const std::shared_ptr<MeshModel> Scene::GetModel(int index) const
-{
-	return models[index];
-}
-
 const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const
 {
 	return models;

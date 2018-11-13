@@ -45,10 +45,13 @@ public:
 =======
 	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 	void Renderer::SetTransformation(MeshModel& model);
-	void Renderer::DrawTriangle(std::vector<glm::vec3> triangle);
+	void Renderer::DrawTriangle(glm::vec3& a, glm::vec3& b, glm::vec3& c);
 	std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
+<<<<<<< HEAD
 	std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec);
 >>>>>>> 6eafb69db38614fcb94b865b4543400e6465d216
+=======
+>>>>>>> parent of 6eafb69... Added basic projections + fix lookAt (still notW)
 
 	// Add more methods/functionality as needed...
 };
