@@ -70,6 +70,13 @@ const Camera Scene::GetCamera(int index) const
 
 
 
+void Scene::SetDrawNormals(bool draw, std::string genre, float normal_size)
+{
+	this->toDrawNormals = draw;
+	this->draw_genre = genre;
+	this->normal_size = normal_size;
+}
+
 void Scene::SetActiveModelIndex(int index)
 {
 	// implementation suggestion...
@@ -82,4 +89,13 @@ void Scene::SetActiveModelIndex(int index)
 const int Scene::GetActiveModelIndex() const
 {
 	return activeModelIndex;
+}
+
+const float Scene::GetDrawNormals(std::string& type) const
+{
+	if (this->toDrawNormals) {
+		type = this->draw_genre;
+		return normal_size;
+	}
+	return 0;
 }

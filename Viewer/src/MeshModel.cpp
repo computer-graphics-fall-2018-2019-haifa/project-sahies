@@ -73,6 +73,8 @@ const glm::mat4x4 & MeshModel::GetObjectTransformation() const
 }
 
 
+
+
 void MeshModel::SetColor(const glm::vec4& color)
 {
 	this->color = color;
