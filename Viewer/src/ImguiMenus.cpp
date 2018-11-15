@@ -52,7 +52,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
 
 
-
+		//*************add option for camera another eye at up*****************
 /*
 		ImGui::Combo("Select Model", &model_active_idx, models, scene.GetModelCount());
 		ImGui::Combo("Select Cameras", &camera_active_idx, cameras, scene.GetCameraCount());

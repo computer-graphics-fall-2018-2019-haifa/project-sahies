@@ -22,7 +22,7 @@ Camera::Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, M
 	this->zFar = 100;
 	this->fovy = 1;
 	this->aspect = 1;
-
+	SetOrthographicProjection(1, 1, 10, 150);
 }
 
 Camera::~Camera()

@@ -15,7 +15,6 @@ class MeshModel
 private:
 	std::vector<Face> faces;
 	std::vector<glm::vec3> normals;
-	glm::vec4 color;
 	std::string modelName;
 	std::string transformName;
 	std::vector<glm::vec3> cordinatesTransformations;
@@ -28,6 +27,8 @@ protected:
 	std::vector<glm::mat4> matTransformations;
 	std::vector<glm::mat4> matWorldTransformations;
 	std::vector<glm::vec3> vertices;
+	glm::vec3 color;
+
 
 
 public:
@@ -38,9 +39,9 @@ public:
 	glm::vec3 findMax(std::vector<glm::vec3>& vertices);
 	glm::vec3 findMin(std::vector<glm::vec3>& vertices);
 
-	const glm::vec4& GetColor() const;
+	const glm::vec3& GetColor() const;
 	const std::string& GetTransform() const;
-	void SetColor(const glm::vec4& color);
+	void SetColor(const glm::vec3& color);
 	void setVertices(const std::vector<glm::vec3> vertices);
 	void SetTransform(const std::string& name);
 	void SetCordinates(const glm::vec3& cordinates, std::string& name);

@@ -40,7 +40,7 @@ public:
 	void DrawNormals(Face face, std::vector<glm::vec3> normals, std::vector<glm::vec3>  vertices,std::string draw_genre, float size_normal);
 	void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, glm::vec3& color = glm::vec3(0, 0, 0));
 	void Renderer::SetTransformation(MeshModel& model, std::string genreTransformation);
-	void Renderer::DrawTriangle(std::vector<glm::vec3> triangle);
+	void Renderer::DrawTriangle(std::vector<glm::vec3> triangle, glm::vec3 color);
 	static std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
 	//std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec, std::string name);
 	void Renderer::DrawCube(std::shared_ptr<MeshModel>& model);

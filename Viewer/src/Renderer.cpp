@@ -178,13 +178,14 @@ void Renderer::Render(const Scene& scene, int& change)
 					model->SetNewVertices(new_vec);
 					//if something -> ;
 
-					model->CreateCube(new_vec, viewportWidth / 2, viewportHeight / 2);
-					DrawCube(model);
+					//model->CreateCube(new_vec, viewportWidth / 2, viewportHeight / 2);
+					//DrawCube(model);
 				}
 
 				for (auto face : model->GetFaces())
 				{
-					DrawTriangle(FromVecToTriangle(face, new_vec));
+					glm::vec3 color = model->GetColor();
+					DrawTriangle(FromVecToTriangle(face, new_vec), color);
 					if (float normal_size = scene.GetDrawNormals(draw_genre))
 						DrawNormals(face, new_vec_n, new_vec, draw_genre, normal_size);
 				}
@@ -192,8 +193,15 @@ void Renderer::Render(const Scene& scene, int& change)
 		} else
 		{
 			for (auto model : scene.GetModels()) {
-				for (auto face : model->GetFaces())
-					DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()));
+				for (auto face : model->GetFaces()) {
+					glm::vec3 color = model->GetColor();
+					DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), color);
+					if (float normal_size = scene.GetDrawNormals(draw_genre)) {
+						DrawNormals(face, new_vec_n, new_vec, draw_genre, normal_size);
+					}
+					//if something -> ;
+					//DrawCube(model);
+				}
 			}
 		}
 	}
@@ -207,7 +215,6 @@ glm::mat4 Renderer::UpdateChangesCamera(Camera& active_camera)
 	//active_camera.SetCamTransformation();
 	active_camera.SetWorldTransformation();
 	active_camera.SetObjectTransformation();
-	active_camera.SetPerspectiveProjection(45, 1, 100, 1000);
 	return active_camera.GetProjection() * glm::inverse(active_camera.GetViewTransformation()) * active_camera.GetWorldTransformation() * active_camera.GetObjectTransformation();
 	//return  active_camera.GetObjectTransformation();
 
@@ -218,41 +225,38 @@ glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, Camera
 {
 	model->SetWorldTransformation();
 	model->SetObjectTransformation();
-	//active_camera.SetOrthographicProjection(1, 1, 10, 150);
-	active_camera.SetPerspectiveProjection(45, 1, 100, 1000);
 	return active_camera.GetProjection() *  glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
 	//return model->GetObjectTransformation();
 }
-
 
 
 void Renderer::DrawCube(std::shared_ptr<MeshModel>& model)
 {
 	std::map<std::string, glm::vec3> cube = model->GetCube();
 
-	bresenham_line(cube["ltf"].x, cube["ltf"].y, cube["rtf"].x, cube["rtf"].y, glm::vec3(1,0,0));
-	bresenham_line(cube["lbf"].x, cube["lbf"].y, cube["rbf"].x, cube["rbf"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["ltf"].x, cube["ltf"].y, cube["lbf"].x, cube["lbf"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["rtf"].x, cube["rtf"].y, cube["rbf"].x, cube["rbf"].y, glm::vec3(1, 0, 0));
-
-	bresenham_line(cube["rtf"].x, cube["rtf"].y, cube["rtb"].x, cube["rtb"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["ltf"].x, cube["ltb"].y, cube["rtb"].x, cube["rtb"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["ltb"].x, cube["ltb"].y, cube["ltf"].x, cube["ltf"].y, glm::vec3(1, 0, 0));
-
-	bresenham_line(cube["rbb"].x, cube["rbb"].y, cube["rbf"].x, cube["rbf"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["rbb"].x, cube["rbb"].y, cube["rtb"].x, cube["rtb"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["rbb"].x, cube["rbb"].y, cube["lbb"].x, cube["lbb"].y, glm::vec3(1, 0, 0));
-
-	bresenham_line(cube["lbb"].x, cube["lbb"].y, cube["lbf"].x, cube["lbf"].y, glm::vec3(1, 0, 0));
-	bresenham_line(cube["lbb"].x, cube["lbb"].y, cube["ltb"].x, cube["ltb"].y, glm::vec3(1, 0, 0));
+	bresenham_line(cube["ltf"].x / cube["ltf"].z, cube["ltf"].y/cube["ltf"].z, cube["rtf"].x/cube["rtf"].z, cube["rtf"].y / cube["rtf"].z, glm::vec3(1,0,0));
+	bresenham_line(cube["lbf"].x / cube["lbf"].z, cube["lbf"].y/cube["lbf"].z, cube["rbf"].x/cube["rbf"].z, cube["rbf"].y/cube["rbf"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["ltf"].x / cube["ltf"].z, cube["ltf"].y/cube["ltf"].z, cube["lbf"].x/cube["lbf"].z, cube["lbf"].y/cube["lbf"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["rtf"].x / cube["rtf"].z, cube["rtf"].y/cube["rtf"].z, cube["rbf"].x/cube["rbf"].z, cube["rbf"].y/cube["rbf"].z, glm::vec3(1, 0, 0));
+											   						  
+	bresenham_line(cube["rtf"].x / cube["rtf"].z, cube["rtf"].y/cube["rtf"].z, cube["rtb"].x/cube["rtb"].z, cube["rtb"].y/cube["rtb"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["ltb"].x / cube["ltb"].z, cube["ltb"].y/cube["ltb"].z, cube["rtb"].x/cube["rtb"].z, cube["rtb"].y/cube["rtb"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["ltb"].x / cube["ltb"].z, cube["ltb"].y/cube["ltb"].z, cube["ltf"].x/cube["ltf"].z, cube["ltf"].y/cube["ltf"].z, glm::vec3(1, 0, 0));
+											   						  
+	bresenham_line(cube["rbb"].x / cube["rbb"].z, cube["rbb"].y/cube["rbb"].z, cube["rbf"].x/cube["rbf"].z, cube["rbf"].y/cube["rbf"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["rbb"].x / cube["rbb"].z, cube["rbb"].y/cube["rbb"].z, cube["rtb"].x/cube["rtb"].z, cube["rtb"].y/cube["rtb"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["rbb"].x / cube["rbb"].z, cube["rbb"].y/cube["rbb"].z, cube["lbb"].x/cube["lbb"].z, cube["lbb"].y/cube["lbb"].z, glm::vec3(1, 0, 0));
+											  						  
+	bresenham_line(cube["lbb"].x / cube["lbb"].z, cube["lbb"].y/cube["lbb"].z, cube["lbf"].x/cube["lbf"].z, cube["lbf"].y/cube["lbf"].z, glm::vec3(1, 0, 0));
+	bresenham_line(cube["lbb"].x / cube["lbb"].z, cube["lbb"].y/cube["lbb"].z, cube["ltb"].x/cube["ltb"].z, cube["ltb"].y/cube["ltb"].z, glm::vec3(1, 0, 0));
 
 }
 
-void Renderer::DrawTriangle(std::vector<glm::vec3> triangle)
+void Renderer::DrawTriangle(std::vector<glm::vec3> triangle, glm::vec3 color)
 	{
-		bresenham_line(triangle[0].x, triangle[0].y, triangle[1].x, triangle[1].y);
-		bresenham_line(triangle[0].x, triangle[0].y, triangle[2].x, triangle[2].y);
-		bresenham_line(triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y);
+		bresenham_line(triangle[0].x, triangle[0].y, triangle[1].x, triangle[1].y, color);
+		bresenham_line(triangle[0].x, triangle[0].y, triangle[2].x, triangle[2].y, color);
+		bresenham_line(triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y, color);
 	}
 
 
@@ -294,9 +298,9 @@ void Renderer::DrawNormals(Face face, std::vector<glm::vec3> normals, std::vecto
 
 		}
 		else {
-			glm::vec3 a_end = glm::vec3(vertices[a].x + size_normal * normals[a_n].x, vertices[a].y + size_normal*normals[a_n].y, 0);
-			glm::vec3 b_end = glm::vec3(vertices[b].x + size_normal * normals[b_n].x, vertices[b].y + size_normal*normals[b_n].y, 0);
-			glm::vec3 c_end = glm::vec3(vertices[c].x + size_normal * normals[c_n].x, vertices[c].y + size_normal*normals[c_n].y, 0);
+			glm::vec3 a_end = glm::vec3(vertices[a].x + size_normal * normals[a_n].x, vertices[a].y + size_normal * normals[a_n].y, 0);
+			glm::vec3 b_end = glm::vec3(vertices[b].x + size_normal * normals[b_n].x, vertices[b].y + size_normal * normals[b_n].y, 0);
+			glm::vec3 c_end = glm::vec3(vertices[c].x + size_normal * normals[c_n].x, vertices[c].y + size_normal * normals[c_n].y, 0);
 
 			vertices[a] += center_shift;
 			vertices[b] += center_shift;
@@ -310,6 +314,9 @@ void Renderer::DrawNormals(Face face, std::vector<glm::vec3> normals, std::vecto
 			bresenham_line(vertices[c].x, vertices[c].y, c_end.x, c_end.y, glm::vec3(0, 1, 0));
 		}
 }
+
+
+
 
 
 

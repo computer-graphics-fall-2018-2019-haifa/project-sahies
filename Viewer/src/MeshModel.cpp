@@ -17,6 +17,7 @@ MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3
 	this->vertices = vertices;
 	this->faces = faces;
 	this->normals = normals;
+	SetColor({ rand() % 300 , rand() % 300,rand() % 300 });
 }
 
 MeshModel::MeshModel(const MeshModel& model)
@@ -29,6 +30,7 @@ MeshModel::MeshModel(const MeshModel& model)
 	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
 	this->modelName = model.modelName;
 	this->matWorldTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
+	SetColor({ rand() % 300 , rand() % 300,rand() % 300 });
 }
 
 MeshModel::~MeshModel()
@@ -88,7 +90,7 @@ const glm::mat4x4 & MeshModel::GetObjectTransformation() const
 
 
 
-void MeshModel::SetColor(const glm::vec4& color)
+void MeshModel::SetColor(const glm::vec3& color)
 {
 	this->color = color;
 }
@@ -145,7 +147,7 @@ const std::vector<glm::vec3> MeshModel::GetVertices() const
 	return vertices;
 }
 
-const glm::vec4& MeshModel::GetColor() const
+const glm::vec3& MeshModel::GetColor() const
 {
 	return color;
 }
