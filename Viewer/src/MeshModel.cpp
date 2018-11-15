@@ -5,14 +5,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
+#include <list>
 
 MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, const std::string& modelName) :
 	modelName(modelName),
 	worldTransform(glm::mat4x4(1))
 {
 	this->matTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1)};
-	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
+	this->cordinatesTransformations = { glm::vec3(1),glm::vec3(1), glm::vec3(1) };
 	this-> matWorldTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
 	this->vertices = vertices;
 	this->faces = faces;
@@ -41,6 +41,9 @@ void MeshModel::SetWorldTransformation()
 	this->worldTransform = matWorldTransformations[2] * matWorldTransformations[0] * matWorldTransformations[1];
 }
 
+ void MeshModel::InitCordinate()  {
+	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
+}
 
 void MeshModel::SetObjectTransformation()
 {
@@ -163,31 +166,60 @@ const std::map<std::string, glm::vec3> MeshModel::GetCube() const
 	return cube;
 }
 
-void MeshModel::CreateCube()
+void MeshModel::CreateCube(std::vector<glm::vec3>& vertices, float h, float w)
 {
+	glm::vec3 center_shift = glm::vec3(h, w, 0);
+	glm::vec3 max = findMax(vertices) + center_shift;
+	glm::vec3 min = findMin(vertices) + center_shift;
+
+	float right = max.x;
+	float left = min.x;
+	float bottom = min.y;
+	float top = max.y;
+	float front = min.z;
+	float back = max.z;
+	
+
+	cube["lbf"] = glm::vec3(left, bottom, front);
+	cube["rbf"] = glm::vec3(right, bottom, front);
+
+	cube["ltf"] = glm::vec3(left, top, front);
+	cube["rtf"] = glm::vec3(right, top, front);
+
+	cube["lbb"] = glm::vec3(left, bottom, back);
+	cube["rbb"] = glm::vec3(right, bottom, back);
+
+	cube["ltb"] = glm::vec3(left, top, back);
+	cube["rtb"] = glm::vec3(right, top, back);
+
+}
+
+glm::vec3 MeshModel::findMax(std::vector<glm::vec3>& vertices)
+{
+	float max_x = vertices[0].x, max_z = vertices[0].z, max_y = vertices[0].y;
 	for (auto vertex : vertices)
 	{
-		back = (back >= vertex.z) ? back : vertex.z;
-		front = (front <= vertex.z) ? front : vertex.z;
-
-		right = (right >= vertex.x) ? right : vertex.x;
-		left = (left <= vertex.x) ? left : vertex.x;
-
-		top = (top >= vertex.y) ? top : vertex.y;
-		bottom = (top >= vertex.y) ? top : vertex.y;
+		if (vertex.x > max_x)
+			max_x = vertex.x;
+		if (vertex.y > max_y)
+			max_y = vertex.y;
+		if (vertex.z > max_z)
+			max_z = vertex.z;
 	}
+	return { max_x,max_y,max_z };
+}
 
-
-	cube["fbl"] = glm::vec3(left, bottom, front);
-	cube["fbr"] = glm::vec3(right, bottom, front);
-
-	cube["ftl"] = glm::vec3(left, top, front);
-	cube["ftr"] = glm::vec3(right, top, front);
-
-	cube["bbl"] = glm::vec3(left, bottom, back);
-	cube["bbr"] = glm::vec3(right, bottom, back);
-
-	cube["btl"] = glm::vec3(left, top, back);
-	cube["btr"] = glm::vec3(right, top, back);
-
+glm::vec3 MeshModel::findMin(std::vector<glm::vec3>& vertices)
+{
+	float min_x = vertices[0].x, min_z = vertices[0].z, min_y = vertices[0].y;
+	for (auto vertex : vertices)
+	{
+		if (vertex.x < min_x)
+			min_x = vertex.x;
+		if (vertex.y < min_y)
+			min_y = vertex.y;
+		if (vertex.z < min_z)
+			min_z = vertex.z;
+	}
+	return { min_x,min_y,min_z };
 }

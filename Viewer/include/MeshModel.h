@@ -19,7 +19,6 @@ private:
 	std::string modelName;
 	std::string transformName;
 	std::vector<glm::vec3> cordinatesTransformations;
-	float front, back, right, left, top, bottom;
 	std::map<std::string, glm::vec3> cube;
 
 protected:
@@ -35,8 +34,8 @@ public:
 	virtual ~MeshModel();
 	MeshModel(const MeshModel& model);
 
-	
-	
+	glm::vec3 findMax(std::vector<glm::vec3>& vertices);
+	glm::vec3 findMin(std::vector<glm::vec3>& vertices);
 
 	const glm::vec4& GetColor() const;
 	const std::string& GetTransform() const;
@@ -55,9 +54,10 @@ public:
 	const std::vector<glm::vec3> MeshModel::GetVertices() const;
 	const std::vector<Face> MeshModel::GetFaces() const;
 	const std::vector<glm::vec3> GetNormals() const;
-	void MeshModel::CreateCube();
+	void MeshModel::CreateCube(std::vector<glm::vec3>& vertices,float h, float w);
 	const glm::mat4x4& GetWorldTransformation() const;
 	const glm::mat4x4& GetObjectTransformation() const;
+	 void InitCordinate() ;
 
 	// Add more methods/functionality as needed...
 };

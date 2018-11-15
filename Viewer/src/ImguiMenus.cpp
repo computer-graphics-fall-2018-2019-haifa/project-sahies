@@ -41,7 +41,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 		std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies\\Data\\camera.obj";
 		static int counter = 0;
-		static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
+		static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
 		zoom, left, right, bottom, top, zNear, zFar, fovy, aspect, normal_size;
 		std::string projectionType, draw_genre;
 		int e, c, camera_active_idx, model_active_idx;
@@ -73,49 +73,36 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			std::vector<Camera> cameras = scene.GetCameras();
 			std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
 	
-			if (ImGui::SliderFloat("scale_all", &scale_all, -20.0f, 20.0f))
-			{
+			if (ImGui::SliderFloat("scale_all", &scale_all, 0.0f, 250.0f))
 				SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object");
-					scale_all = 1.0f, scale_all = 1.0f, scale_all = 1.0f;
-			}
+
 				
 
-			if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("scale_y", &scale_y, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("scale_z", &scale_z, -20.0f, 20.0f)) 
-			{   
+			if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
+				ImGui::SliderFloat("scale_y", &scale_y, 0.0f, 250.0f) ||
+				ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))  
 					SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object");
-					scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
-			}
+
 
 			if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
-			{
 				SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object");
-				tr_all = 1.0f, tr_all = 1.0f, tr_all = 1.0f;
-			}
 
 			if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
-			{
 					SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object");
-					tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
-			}
+
 
 			if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
 				ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
-			{
 					SubmitTransform(model, renderer, x, y, z, "rotate",  "object");
-					x = 0.0f, y = 0.0f, z = 0.0f;
-			}
+	
 
 
 			if (ImGui::SliderFloat("rotate_all", &rotate_all, -20.0f, 20.0f))
-			{
 				SubmitTransform(model, renderer, rotate_all, rotate_all, rotate_all, "rotate", "object");
-				rotate_all = 1.0f, rotate_all = 1.0f, rotate_all = 1.0f;
-			}
+			
 
 
 
@@ -162,10 +149,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 			ImGui::RadioButton("Perspective", &c, 0) ; ImGui::SameLine();
 			ImGui::RadioButton("Orthographic", &c, 1);
+
 			if (c)
-				camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+				camera.SetOrthographicProjection(1, 1, 10, 150);
+				//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
 			else
-				camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
+				camera.SetPerspectiveProjection(45, 1, 100, 1000);
+				//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
 
 
 			if (ImGui::Button("Draw Normals")) {
@@ -254,6 +244,7 @@ void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float
 	model->SetTransform(name);
 	model->SetCordinates({ x, y, z }, name);
 	renderer.SetTransformation(*model, genreTransformation);
+	model->InitCordinate();
 }
 
 

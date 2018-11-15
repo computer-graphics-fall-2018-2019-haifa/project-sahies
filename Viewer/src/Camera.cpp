@@ -84,33 +84,46 @@ void Camera::SetWorldTransformation()
 void Camera::SetOrthographicProjection(
 	const float height,
 	const float aspectRatio,
-	const float near,
-	const float far)
+	const float _near,
+	const float _far)
 {
-	    glm::mat4 mat = {
-			 2.0 / (right - left), 0, 0, 0,
-			 0, 2.0 / (top - bottom), 0, 0,
-			 0, 0, 2.0 / (zNear - zFar), 0,
-			 -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(zFar + zNear) / (zFar - zNear), 1 
-		};
-		this->projectionTransformation = mat;
+	float width = height * aspectRatio;
+	float top = 0.5 * height;
+	float bottom = -0.5 * height;
+	float left = -0.5 * width;
+	float right = 0.5 * width;
+	// T * S - move center and scale sides length
+	glm::mat4 mat = {
+			2.0 / (right - left), 0, 0, 	-(right + left) / (right - left),
+			0, 2.0 / (top - bottom), 0, -(top + bottom) / (top - bottom),
+			0, 0, 2.0 / (_near - _far), -(_far + _near) / (_far - _near),
+			0, 0,0, 1
+	};
+	this->projectionTransformation = glm::transpose(mat);
 }
 
 void Camera::SetPerspectiveProjection(
 	const float fovy,
 	const float aspectRatio,
-	const float near,
-	const float far)
+	const float _near,
+	const float _far)
 {
-	float top = zNear * (sin(fovy * M_PI / 180.0) / cos(fovy * M_PI / 180.0));
-	float right = top * aspect;
+
+	// shear * scale to make 45 angle * divide by z
+	float height = (_far - _near) * tan(fovy * M_PI/ 180.0);
+	float width = aspectRatio * height;
+	float t = 0.5 * height;
+	float b = -0.5 * height;
+	float l = -0.5 * width;
+	float r = 0.5 * width;
+
 	glm::mat4 mat = {
-		 zNear / right, 0, 0, 0 ,
-		 0, zNear / top, 0, 0 ,
-		 0,0, (-zFar + zNear) / (zFar - zNear), -1 ,
-		 0, 0, -2 * zFar * zNear / (zFar - zNear), 0 
+		(2 * _near) / (r - l), 0, (r + l) / (r - l), 0,
+		0, (2 * _near) / (t - b), (t + b) / (t - b), 0,
+		0, 0, -(_far + _near) / (_far - _near), -(2 * _far * _near) / (_far - _near),
+		0, 0, -1, 0
 	};
-	this->projectionTransformation = mat;
+	this->projectionTransformation = glm::transpose(glm::inverse(mat));
 }
 
 void Camera::SetZoom(const float zoom)
