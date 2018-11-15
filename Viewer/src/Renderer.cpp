@@ -148,43 +148,56 @@ std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, g
 }
 
 
-void Renderer::Render(const Scene& scene)
+void Renderer::Render(const Scene& scene, int& change)
 {
 	std::vector<glm::vec3> new_vec_n, new_vec;
 	std::string draw_genre;
 
-	if (scene.GetModelCount()) {
-
+	if (scene.GetModelCount()) 
+	{
 		Camera active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
-		glm::mat4 cameraTransformations = UpdateChangesCamera(active_camera);
+		if (change) 
+		{
+			glm::mat4 cameraTransformations = UpdateChangesCamera(active_camera);
 
 
-		for (auto model : scene.GetModels()) {			
-			glm::mat4 modelTransformations = UpdateChangesModel(model, active_camera);
+			for (auto model : scene.GetModels())
+			{
+				glm::mat4 modelTransformations = UpdateChangesModel(model, active_camera);
 
 
-			if (active_camera.GetModelName() == model->GetModelName()) {	
-				new_vec_n = VerticesXmat(active_camera.GetNormals(), cameraTransformations);
-				new_vec = VerticesXmat(active_camera.GetVertices(), cameraTransformations);
+				if (active_camera.GetModelName() == model->GetModelName()) {
+					new_vec_n = VerticesXmat(active_camera.GetNormals(), cameraTransformations);
+					new_vec = VerticesXmat(active_camera.GetVertices(), cameraTransformations);
+					model->SetNewVertices(new_vec);
+				}
+
+				else {
+					new_vec_n = VerticesXmat(model->GetNormals(), modelTransformations);
+					new_vec = VerticesXmat(model->GetVertices(), modelTransformations);
+					model->SetNewVertices(new_vec);
+					//if something -> ;
+
+					model->CreateCube(new_vec, viewportWidth / 2, viewportHeight / 2);
+					DrawCube(model);
+				}
+
+				for (auto face : model->GetFaces())
+				{
+					DrawTriangle(FromVecToTriangle(face, new_vec));
+					if (float normal_size = scene.GetDrawNormals(draw_genre))
+						DrawNormals(face, new_vec_n, new_vec, draw_genre, normal_size);
+				}
 			}
-
-			else {
-				new_vec_n = VerticesXmat(model->GetNormals(), modelTransformations);
-				new_vec = VerticesXmat(model->GetVertices(), modelTransformations);
-				//if something -> ;
-
-				model->CreateCube(new_vec,viewportWidth / 2,viewportHeight / 2);
-				DrawCube(model);
+		} else
+		{
+			for (auto model : scene.GetModels()) {
+				for (auto face : model->GetFaces())
+					DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()));
 			}
-
-			for (auto face : model->GetFaces() ) {
-				DrawTriangle(FromVecToTriangle(face, new_vec));
-				if (float normal_size = scene.GetDrawNormals(draw_genre))
-					DrawNormals(face, new_vec_n, new_vec, draw_genre, normal_size);
-			}
-
 		}
 	}
+	change = 0;
 }
 
 
@@ -195,8 +208,8 @@ glm::mat4 Renderer::UpdateChangesCamera(Camera& active_camera)
 	active_camera.SetWorldTransformation();
 	active_camera.SetObjectTransformation();
 	active_camera.SetPerspectiveProjection(45, 1, 100, 1000);
-	//return active_camera.GetProjection() * glm::inverse(active_camera.GetViewTransformation()) * active_camera.GetWorldTransformation() * active_camera.GetObjectTransformation();
-	return  active_camera.GetObjectTransformation();
+	return active_camera.GetProjection() * glm::inverse(active_camera.GetViewTransformation()) * active_camera.GetWorldTransformation() * active_camera.GetObjectTransformation();
+	//return  active_camera.GetObjectTransformation();
 
 }
 
@@ -207,8 +220,8 @@ glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, Camera
 	model->SetObjectTransformation();
 	//active_camera.SetOrthographicProjection(1, 1, 10, 150);
 	active_camera.SetPerspectiveProjection(45, 1, 100, 1000);
-	//return active_camera.GetProjection() *  glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
-	return model->GetObjectTransformation();
+	return active_camera.GetProjection() *  glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
+	//return model->GetObjectTransformation();
 }
 
 

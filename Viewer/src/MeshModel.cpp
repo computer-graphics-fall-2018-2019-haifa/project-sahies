@@ -45,6 +45,16 @@ void MeshModel::SetWorldTransformation()
 	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
 }
 
+ void MeshModel::SetNewVertices(std::vector<glm::vec3>& vertices)
+ {
+	 this->newVertices = vertices;
+ }
+
+ std::vector<glm::vec3> MeshModel::GetNewVertices()
+ {
+	 return newVertices;
+ }
+
 void MeshModel::SetObjectTransformation()
 {
 	this->objectTransform = matTransformations[2] * matTransformations[0] * matTransformations[1];

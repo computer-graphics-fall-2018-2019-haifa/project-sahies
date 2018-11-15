@@ -20,6 +20,7 @@ private:
 	std::string transformName;
 	std::vector<glm::vec3> cordinatesTransformations;
 	std::map<std::string, glm::vec3> cube;
+	std::vector<glm::vec3> newVertices;
 
 protected:
 	glm::mat4x4 worldTransform; 
@@ -58,6 +59,8 @@ public:
 	const glm::mat4x4& GetWorldTransformation() const;
 	const glm::mat4x4& GetObjectTransformation() const;
 	 void InitCordinate() ;
+	 void SetNewVertices(std::vector<glm::vec3>& vertices);
+	 std::vector<glm::vec3> GetNewVertices();
 
 	// Add more methods/functionality as needed...
 };
