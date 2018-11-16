@@ -1,10 +1,10 @@
 # Computer Graphics 203.3710, Winter 2018/2019
 ## Students Team data
 
-Name: 'Or Berger'
+Name: Or Berger
 Student Number: 308571512
 
-Name: 'Mor Vaknin'  
+Name: Mor Vaknin  
 Student Number: 305334674
 
 ### Lecturer

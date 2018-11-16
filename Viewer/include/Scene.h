@@ -20,6 +20,10 @@ private:
 	int activeCameraIndex;
 	int activeModelIndex;
 
+	bool toDrawNormals = 0;
+	std::string draw_genre;
+	float normal_size;
+
 public:
 	Scene();
 
@@ -38,9 +42,10 @@ public:
 	const Camera GetCamera(int index) const;
 	
 
-
+	void SetDrawNormals(bool draw, std::string genre, float normal_size);
 	void SetActiveModelIndex(int index);
 	const int GetActiveModelIndex() const;
+	const float GetDrawNormals(std::string& type) const;
 
 	// Add more methods as needed...
 };
