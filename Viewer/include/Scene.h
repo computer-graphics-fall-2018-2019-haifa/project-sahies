@@ -16,15 +16,14 @@ class Scene {
 private:
 	std::vector<std::shared_ptr<MeshModel>> models;
 	std::vector<Camera> cameras;
-
 	int activeCameraIndex;
-	int activeModelIndex;
 
 	bool toDrawNormals = 0;
 	std::string draw_genre;
 	float normal_size;
 
 public:
+	int activeModelIndex; // Need to be private. dont know why it dosent work
 	Scene();
 
 	void AddModel(const std::shared_ptr<MeshModel>& model);
@@ -40,6 +39,7 @@ public:
 	void SetActiveCameraIndex(int index);
 	const int GetActiveCameraIndex() const;
 	const Camera GetCamera(int index) const;
+	std::vector<std::string> GetModelsNames();
 	
 
 	void SetDrawNormals(bool draw, std::string genre, float normal_size);
