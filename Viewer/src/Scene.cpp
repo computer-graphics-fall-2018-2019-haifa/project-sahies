@@ -77,6 +77,16 @@ std::vector<std::string>Scene::GetModelsNames()
 }
 
 
+std::vector<std::string>Scene::GetCamerasNames()
+{
+	std::vector<std::string> names;
+	for (int i = 0; i < GetCameraCount(); i++)
+		names.push_back(cameras[i].GetModelName());
+	return names;
+}
+
+
+
 
 void Scene::SetDrawNormals(bool draw, std::string genre, float normal_size)
 {

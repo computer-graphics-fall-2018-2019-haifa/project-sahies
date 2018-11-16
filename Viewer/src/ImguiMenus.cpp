@@ -20,11 +20,21 @@ bool toDrawNormals = 0;
 int mul = 1;
 
 
+
 glm::vec4 clearColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.00f);
 
 const glm::vec4& GetClearColor()
 {
 	return clearColor;
+}
+
+void cleanCamerasFromModels(std::vector<std::string>& models_names) {
+	for (int i = 0; i < models_names.size(); i++) {
+		if (models_names[i].find("camera") != std::string::npos) {
+			models_names.erase(models_names.begin() + i);
+			i--;
+		}
+	}
 }
 
 void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
@@ -51,18 +61,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		ImGui::Text("This is some notuseful text.");               // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
 	
-		std::vector<std::string> models_names = scene.GetModelsNames();
-		if (models_names.size() > 0) {
-			char** c_models_names = new char*[models_names.size()];
-			for (int i = 0; i < models_names.size(); ++i)
-			{
-				c_models_names[i] = (char*)(models_names[i].c_str());
-			}
-
-			ImGui::Combo("Select Model", &scene.activeModelIndex, c_models_names, models_names.size());
-		
-		}
-
+	
 		//*************add option for camera another eye at up*****************
 /*
 		ImGui::Combo("Select Model", &model_active_idx, models, scene.GetModelCount());
@@ -79,114 +78,142 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 			change = 1;
 		}
+		std::vector<std::string> models_names = scene.GetModelsNames();
+		std::vector<std::string> cameras_names = scene.GetCamerasNames();
+
+		//clean cameras from modesls names
+	/*	for (int i = 0; i < models_names.size(); i++) {
+			if (models_names[i].find("camera") != std::string::npos) {
+				models_names.erase(models_names.begin() + i);
+			}
+		}
+*/
+		cleanCamerasFromModels(models_names);
+		if (models_names.size() > 0) {
+			char** c_models_names = new char*[models_names.size()];
+			for (int i = 0; i < models_names.size(); ++i)
+			{
+				c_models_names[i] = (char*)(models_names[i].c_str());
+			}
+			ImGui::Combo("Choose Model", &scene.activeModelIndex, c_models_names, models_names.size());
+		}
+		if (cameras_names.size() > 0) {
+
+			char** c_cameras_names = new char*[cameras_names.size()];
+			for (int i = 0; i < cameras_names.size(); ++i)
+			{
+				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
+			}
+			ImGui::Combo("Choose Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
+		}
 			
-			Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
-			std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
-			std::vector<Camera> cameras = scene.GetCameras();
-			std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
+		Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
+		std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
+		std::vector<Camera> cameras = scene.GetCameras();
+		std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
 	
-			if (ImGui::SliderFloat("scale_all", &scale_all, 0.0f, 250.0f))
-				SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+		if (ImGui::SliderFloat("scale_all", &scale_all, 0.0f, 250.0f))
+			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
 
 				
 
-			if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
-				ImGui::SliderFloat("scale_y", &scale_y, 0.0f, 250.0f) ||
-				ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))  
-					SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
+		if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
+			ImGui::SliderFloat("scale_y", &scale_y, 0.0f, 250.0f) ||
+			ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))  
+				SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
 
 
-			if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
-				SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object", change);
+		if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
+			SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object", change);
 
-			if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
-					SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
+		if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
+				SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
 
 
-			if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
-					SubmitTransform(model, renderer, x, y, z, "rotate",  "object", change);
+		if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
+				SubmitTransform(model, renderer, x, y, z, "rotate",  "object", change);
 	
 
 
-			if (ImGui::SliderFloat("rotate_all", &rotate_all, -20.0f, 20.0f))
-				SubmitTransform(model, renderer, rotate_all, rotate_all, rotate_all, "rotate", "object", change);
+		if (ImGui::SliderFloat("rotate_all", &rotate_all, -20.0f, 20.0f))
+			SubmitTransform(model, renderer, rotate_all, rotate_all, rotate_all, "rotate", "object", change);
 			
 
 
 
 
-			/*if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f)
-				std::shared_ptr<MeshModel> model = models[name];
-			else */
-			static float CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f, CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
+		/*if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f)
+			std::shared_ptr<MeshModel> model = models[name];
+		else */
+		static float CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f, CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
 
-			if (ImGui::SliderFloat("CAMscale_x", &CAMscale_x, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("CAMscale_y", &CAMscale_y, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("CAMscale_z", &CAMscale_z, -20.0f, 20.0f))
-			{
-				SubmitTransform(model, renderer, CAMscale_x, CAMscale_y, CAMscale_z, "scale", "world", change);
-				CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f;
-			}
+		if (ImGui::SliderFloat("CAMscale_x", &CAMscale_x, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("CAMscale_y", &CAMscale_y, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("CAMscale_z", &CAMscale_z, -20.0f, 20.0f))
+		{
+			SubmitTransform(model, renderer, CAMscale_x, CAMscale_y, CAMscale_z, "scale", "world", change);
+			CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f;
+		}
 
-			if (ImGui::SliderFloat("CAMtr_x", &CAMtr_x, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("CAMtr_y", &CAMtr_y, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("CAMtr_z", &CAMtr_z, -20.0f, 20.0f))
-			{
-				SubmitTransform(model, renderer, CAMtr_x, CAMtr_y, CAMtr_z, "translate", "world", change);
-				CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
-			}
+		if (ImGui::SliderFloat("CAMtr_x", &CAMtr_x, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("CAMtr_y", &CAMtr_y, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("CAMtr_z", &CAMtr_z, -20.0f, 20.0f))
+		{
+			SubmitTransform(model, renderer, CAMtr_x, CAMtr_y, CAMtr_z, "translate", "world", change);
+			CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
+		}
 
 
-			if (ImGui::SliderFloat("CAM_x", &CAM_x, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("CAM_y", &CAM_y, -20.0f, 20.0f) ||
-				ImGui::SliderFloat("CAM_z", &CAM_z, -20.0f, 20.0f))
-			{
-				SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate", "world", change);
-				CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
-			}
+		if (ImGui::SliderFloat("CAM_x", &CAM_x, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("CAM_y", &CAM_y, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("CAM_z", &CAM_z, -20.0f, 20.0f))
+		{
+			SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate", "world", change);
+			CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
+		}
 
-			if (ImGui::SliderFloat("zoom", &zoom, -20.0f, 20.0f)||
-			ImGui::SliderFloat("left", &left, -20.0f, 20.0f)||
-			ImGui::SliderFloat("right", &right, -20.0f, 20.0f)||
-			ImGui::SliderFloat("bottom", &bottom, -20.0f, 20.0f)|| 
-			ImGui::SliderFloat("top", &top, -20.0f, 20.0f)||
-			ImGui::SliderFloat("zNear", &zNear, -20.0f, 20.0f)||
-			ImGui::SliderFloat("zFar", &zFar, -20.0f, 20.0f)||
-			ImGui::SliderFloat("fovy", &fovy, -20.0f, 20.0f)||
-			ImGui::SliderFloat("aspect", &aspect, -20.0f, 20.0f))
-				change = 1;
+		if (ImGui::SliderFloat("zoom", &zoom, -20.0f, 20.0f)||
+		ImGui::SliderFloat("left", &left, -20.0f, 20.0f)||
+		ImGui::SliderFloat("right", &right, -20.0f, 20.0f)||
+		ImGui::SliderFloat("bottom", &bottom, -20.0f, 20.0f)|| 
+		ImGui::SliderFloat("top", &top, -20.0f, 20.0f)||
+		ImGui::SliderFloat("zNear", &zNear, -20.0f, 20.0f)||
+		ImGui::SliderFloat("zFar", &zFar, -20.0f, 20.0f)||
+		ImGui::SliderFloat("fovy", &fovy, -20.0f, 20.0f)||
+		ImGui::SliderFloat("aspect", &aspect, -20.0f, 20.0f))
+			change = 1;
 
-			ImGui::RadioButton("Perspective", &c, 0) ; ImGui::SameLine(); //TODO change = 1;
-			ImGui::RadioButton("Orthographic", &c, 1);
+		ImGui::RadioButton("Perspective", &c, 0) ; ImGui::SameLine(); //TODO change = 1;
+		ImGui::RadioButton("Orthographic", &c, 1);
 
-			if (c) // TODO change = 1;
-				camera.SetOrthographicProjection(1, 1, 10, 150);
-				//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+		if (c) // TODO change = 1;
+			camera.SetOrthographicProjection(1, 1, 10, 150);
+			//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+		else
+			camera.SetPerspectiveProjection(45, 1, 100, 1000);
+			//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
+
+
+		if (ImGui::Button("Draw Normals")) {
+			toDrawNormals += mul;
+			mul *= -1;
+			change = 1;
+		}
+		if (toDrawNormals) {
+			ImGui::SliderFloat("normal_size", &normal_size, 0.001f, 1.0f);
+
+			ImGui::RadioButton("face", &e, 0); ImGui::SameLine();
+			ImGui::RadioButton("vertex", &e, 1);
+			if (e)
+				draw_genre = "vertex";
 			else
-				camera.SetPerspectiveProjection(45, 1, 100, 1000);
-				//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
-
-
-			if (ImGui::Button("Draw Normals")) {
-				toDrawNormals += mul;
-				mul *= -1;
-				change = 1;
-			}
-			if (toDrawNormals) {
-				ImGui::SliderFloat("normal_size", &normal_size, 0.001f, 1.0f);
-
-				ImGui::RadioButton("face", &e, 0); ImGui::SameLine();
-				ImGui::RadioButton("vertex", &e, 1);
-				if (e)
-					draw_genre = "vertex";
-				else
-					draw_genre = "face";
-				scene.SetDrawNormals(toDrawNormals, draw_genre, normal_size);
-			}
+				draw_genre = "face";
+			scene.SetDrawNormals(toDrawNormals, draw_genre, normal_size);
+		}
 			
 
 
@@ -196,15 +223,15 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 		
 
-		ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
+	ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
 
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-			counter++;
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
+	if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+		counter++;
+	ImGui::SameLine();
+	ImGui::Text("counter = %d", counter);
 
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		ImGui::End();
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::End();
 	
 
 	// 3. Show another simple window.
@@ -262,5 +289,4 @@ void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float
 	model->InitCordinate();
 	change = 1;
 }
-
 
