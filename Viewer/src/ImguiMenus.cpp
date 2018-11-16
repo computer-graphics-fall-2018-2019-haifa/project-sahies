@@ -39,7 +39,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
-		std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies\\Data\\camera.obj";
+		std::string camera_path = "C:\project-sahies\project-sahies\Datacamera.obj";
 		static int counter = 0;
 		static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
 		zoom, left, right, bottom, top, zNear, zFar, fovy, aspect, normal_size;
