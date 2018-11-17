@@ -30,12 +30,13 @@ const glm::vec4& GetClearColor()
 
 void cleanCamerasFromModels(std::vector<std::string>& models_names) {
 	for (int i = 0; i < models_names.size(); i++) {
-		if (models_names[i].find("camera") != std::string::npos) {
+		if (models_names[i].find("Camera") != std::string::npos) {
 			models_names.erase(models_names.begin() + i);
 			i--;
 		}
 	}
 }
+
 
 void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 {
@@ -46,57 +47,49 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	}
 
 	
-
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
-		std::string camera_path = "C:\\project-sahies\\project-sahies\\Data\\camera.obj";
-		static int counter = 0;
-		static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
-		zoom, left, right, bottom, top, zNear, zFar, fovy, aspect, normal_size;
-		std::string projectionType, draw_genre;
-		int e, c, camera_active_idx, model_active_idx;
+	std::string camera_path = "C:\\project-sahies\\project-sahies\\Data\\camera.obj";
+	static int CameraCounter = 0;
+	static int counter = 0;
+	static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
+	zoom, left, right, bottom, top, zNear, zFar, fovy, aspect, normal_size;
+	std::string projectionType, draw_genre;
+	int e;
 
-		ImGui::Begin("Or Berger AND Mor Vaknin PlayGround");                          // Create a window called "Hello, world!" and append into it.
+	if (scene.GetCameraCount() == 0) {
+		std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
+		cam_obj->SetModelName("Camera" + std::to_string(CameraCounter));
+		scene.AddModel(cam_obj);
+		CameraCounter++;
+		scene.AddCamera(Camera(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
+		scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
+		change = 1;
+	}
 
-		ImGui::Text("This is some notuseful text.");               // Display some text (you can use a format strings too)
-		ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
+	ImGui::Begin("Or Berger AND Mor Vaknin PlayGround");
+	ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
+	ImGui::Text("Background Color:");
+	ImGui::ColorEdit3("Clear Color", (float*)&clearColor); // Edit 3 floats representing a color
+
 	
-	
-		//*************add option for camera another eye at up*****************
-/*
-		ImGui::Combo("Select Model", &model_active_idx, models, scene.GetModelCount());
-		ImGui::Combo("Select Cameras", &camera_active_idx, cameras, scene.GetCameraCount());
-		SetActiveCameraIndex(model_active_idx);
-		SetActiveModelIndex(camera_active_idx);*/
 
-		if (ImGui::Button("add camera") || scene.GetCameraCount() == 0) {
+	/*****************   Camera Menu   *****************/
+	if (ImGui::CollapsingHeader("Cameras"))
+	{
+		//add camera btn
+		if (ImGui::Button("Add Camera") || scene.GetCameraCount() == 0) {
 			std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
-			cam_obj->SetModelName("camera" + std::to_string(counter));
-			counter++;
+			cam_obj->SetModelName("Camera " + std::to_string(CameraCounter));
+			CameraCounter++;
 			scene.AddModel(cam_obj);
 			scene.AddCamera(Camera(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 			change = 1;
 		}
-		std::vector<std::string> models_names = scene.GetModelsNames();
-		std::vector<std::string> cameras_names = scene.GetCamerasNames();
 
-		//clean cameras from modesls names
-	/*	for (int i = 0; i < models_names.size(); i++) {
-			if (models_names[i].find("camera") != std::string::npos) {
-				models_names.erase(models_names.begin() + i);
-			}
-		}
-*/
-		cleanCamerasFromModels(models_names);
-		if (models_names.size() > 0) {
-			char** c_models_names = new char*[models_names.size()];
-			for (int i = 0; i < models_names.size(); ++i)
-			{
-				c_models_names[i] = (char*)(models_names[i].c_str());
-			}
-			ImGui::Combo("Choose Model", &scene.activeModelIndex, c_models_names, models_names.size());
-		}
+		//make a list of the cameras names
+		std::vector<std::string> cameras_names = scene.GetCamerasNames();		
 		if (cameras_names.size() > 0) {
 
 			char** c_cameras_names = new char*[cameras_names.size()];
@@ -104,23 +97,41 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			{
 				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
 			}
-			ImGui::Combo("Choose Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
+			ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
+			delete[] c_cameras_names;
 		}
-			
+
+		
 		Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
 		std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
 		std::vector<Camera> cameras = scene.GetCameras();
 		std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
-	
+
+		enum Mode
+		{
+			Perspective,
+			Orthographic
+		};
+		static int mode = 0;
+		if (ImGui::RadioButton("Perspective", mode == Perspective)) { mode = Perspective; } ImGui::SameLine(); //TODO change = 1;
+		if (ImGui::RadioButton("Orthographic", mode == Orthographic)) { mode = Orthographic; }
+
+		if (mode == Orthographic) // TODO change = 1;
+			camera.SetOrthographicProjection(1, 1, 10, 150);
+		//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+		else
+			camera.SetPerspectiveProjection(45, 1, 100, 1000);
+		//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
+
 		if (ImGui::SliderFloat("scale_all", &scale_all, 0.0f, 250.0f))
 			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
 
-				
+
 
 		if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
 			ImGui::SliderFloat("scale_y", &scale_y, 0.0f, 250.0f) ||
-			ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))  
-				SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
+			ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))
+			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
 
 
 		if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
@@ -129,26 +140,20 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
-				SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
+			SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
 
 
 		if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
-				SubmitTransform(model, renderer, x, y, z, "rotate",  "object", change);
-	
+			SubmitTransform(model, renderer, x, y, z, "rotate", "object", change);
+
 
 
 		if (ImGui::SliderFloat("rotate_all", &rotate_all, -20.0f, 20.0f))
 			SubmitTransform(model, renderer, rotate_all, rotate_all, rotate_all, "rotate", "object", change);
-			
 
 
-
-
-		/*if (ImGui::SliderFloat("scale_x", &scale_x, -20.0f, 20.0f)
-			std::shared_ptr<MeshModel> model = models[name];
-		else */
 		static float CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f, CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
 
 		if (ImGui::SliderFloat("CAMscale_x", &CAMscale_x, -20.0f, 20.0f) ||
@@ -176,27 +181,39 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
 		}
 
-		if (ImGui::SliderFloat("zoom", &zoom, -20.0f, 20.0f)||
-		ImGui::SliderFloat("left", &left, -20.0f, 20.0f)||
-		ImGui::SliderFloat("right", &right, -20.0f, 20.0f)||
-		ImGui::SliderFloat("bottom", &bottom, -20.0f, 20.0f)|| 
-		ImGui::SliderFloat("top", &top, -20.0f, 20.0f)||
-		ImGui::SliderFloat("zNear", &zNear, -20.0f, 20.0f)||
-		ImGui::SliderFloat("zFar", &zFar, -20.0f, 20.0f)||
-		ImGui::SliderFloat("fovy", &fovy, -20.0f, 20.0f)||
-		ImGui::SliderFloat("aspect", &aspect, -20.0f, 20.0f))
+		if (ImGui::SliderFloat("zoom", &zoom, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("left", &left, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("right", &right, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("bottom", &bottom, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("top", &top, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("zNear", &zNear, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("zFar", &zFar, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("fovy", &fovy, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("aspect", &aspect, -20.0f, 20.0f))
 			change = 1;
 
-		ImGui::RadioButton("Perspective", &c, 0) ; ImGui::SameLine(); //TODO change = 1;
-		ImGui::RadioButton("Orthographic", &c, 1);
+	
 
-		if (c) // TODO change = 1;
-			camera.SetOrthographicProjection(1, 1, 10, 150);
-			//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
-		else
-			camera.SetPerspectiveProjection(45, 1, 100, 1000);
-			//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
 
+	}
+
+
+	/*****************   Models Menu   *****************/
+	if (ImGui::CollapsingHeader("Models")) 
+	{
+		//make a list of the cameras names
+		std::vector<std::string> models_names = scene.GetModelsNames();
+		cleanCamerasFromModels(models_names);
+		if (models_names.size() > 0) {
+
+			char** c_models_names = new char*[models_names.size()];
+			for (int i = 0; i < models_names.size(); ++i)
+				c_models_names[i] = (char*)(models_names[i].c_str());
+
+			static int modelIdx = 0;
+			ImGui::Combo("Choose Model", &modelIdx, c_models_names, models_names.size());
+			delete[] c_models_names;
+		}
 
 		if (ImGui::Button("Draw Normals")) {
 			toDrawNormals += mul;
@@ -214,16 +231,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 				draw_genre = "face";
 			scene.SetDrawNormals(toDrawNormals, draw_genre, normal_size);
 		}
-			
 
 
 
-
-
-
-		
-
-	ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
+	}
 
 	if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
 		counter++;
