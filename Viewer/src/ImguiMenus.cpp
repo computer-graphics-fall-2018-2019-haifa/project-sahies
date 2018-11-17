@@ -67,8 +67,17 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		change = 1;
 	}
 
+
+
+	Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
+	std::vector<Camera> cameras = scene.GetCameras();
+
+	std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
+	std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
+
+
 	ImGui::Begin("Or Berger AND Mor Vaknin PlayGround");
-	ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
+	//ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
 	ImGui::Text("Background Color:");
 	ImGui::ColorEdit3("Clear Color", (float*)&clearColor); // Edit 3 floats representing a color
 
@@ -102,10 +111,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		}
 
 		
-		Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
-		std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
-		std::vector<Camera> cameras = scene.GetCameras();
-		std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
 
 		enum Mode
 		{
@@ -116,31 +121,55 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		if (ImGui::RadioButton("Perspective", mode == Perspective)) { mode = Perspective; } ImGui::SameLine(); //TODO change = 1;
 		if (ImGui::RadioButton("Orthographic", mode == Orthographic)) { mode = Orthographic; }
 
-		if (mode == Orthographic) // TODO change = 1;
-			camera.SetOrthographicProjection(1, 1, 10, 150);
-		//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
-		else
+		if (mode == Perspective) {// TODO change = 1;
 			camera.SetPerspectiveProjection(45, 1, 100, 1000);
-		//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
 
-		if (ImGui::SliderFloat("scale_all", &scale_all, 0.0f, 250.0f))
+			//Zoom/Fovy Slide Bar
+			if (ImGui::SliderFloat("Fovy", &scale_all, 0.0f, 250.0f))
+				for (auto m : models)
+					SubmitTransform(m, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+
+			//Focus Slide Bar
+			static float focus =0;
+			if (ImGui::SliderFloat("Focus", &focus, 0.0f, 250.0f))
+				camera.SetFocus(focus, *model);
+
+
+			//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
+		}
+		else
+		{
+			camera.SetOrthographicProjection(1, 1, 10, 150);
+
+			//Height Slide Bar
+			if (ImGui::SliderFloat("Height", &scale_all, 0.0f, 250.0f))
+				SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+			//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+		}
+
+
+		//Near Slide Bar
+		if (ImGui::SliderFloat("Near", &scale_all, 0.0f, 250.0f))
+			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+
+
+		//Far Slide Bar
+		if (ImGui::SliderFloat("Far", &scale_all, 0.0f, 250.0f))
 			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
 
 
 
+		/*if (ImGui::SliderFloat("scale_all", &scale_all, 0.0f, 250.0f))
+			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+			*/
+
+		// Scale only one axis
 		if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
 			ImGui::SliderFloat("scale_y", &scale_y, 0.0f, 250.0f) ||
 			ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))
 			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
 
 
-		if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
-			SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object", change);
-
-		if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
-			SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
 
 
 		if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
@@ -212,8 +241,19 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 			static int modelIdx = 0;
 			ImGui::Combo("Choose Model", &modelIdx, c_models_names, models_names.size());
+			scene.SetActiveModelIndex(models_names[modelIdx]);
+			model = scene.GetModel(scene.GetActiveModelIndex());
 			delete[] c_models_names;
 		}
+
+
+		if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
+			SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object", change);
+
+		if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
+			ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
+			SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
 
 		if (ImGui::Button("Draw Normals")) {
 			toDrawNormals += mul;
@@ -266,7 +306,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Load Model...", "CTRL+O"))
+				if (ImGui::MenuItem("Load Model", "CTRL+O"))
 				{
 					nfdchar_t *outPath = NULL;
 					nfdresult_t result = NFD_OpenDialog("obj;png,jpg", NULL, &outPath);
@@ -282,11 +322,19 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 					else {
 						//TODO
 					}
-
 				}
-
 				ImGui::EndMenu();
 			}
+			
+
+			if (ImGui::BeginMenu("Help"))
+			{
+				ImGui::MenuItem("Demo Window", "CTRL+D", &showDemoWindow);
+				ImGui::EndMenu();
+			}
+			
+			
+
 			ImGui::EndMainMenuBar();
 		}
 	}

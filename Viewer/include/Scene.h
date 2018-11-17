@@ -47,6 +47,7 @@ public:
 
 	void SetDrawNormals(bool draw, std::string genre, float normal_size);
 	void SetActiveModelIndex(int index);
+	void SetActiveModelIndex(std::string name);
 	const int GetActiveModelIndex() const;
 	const float GetDrawNormals(std::string& type) const;
 

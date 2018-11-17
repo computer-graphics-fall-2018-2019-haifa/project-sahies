@@ -46,6 +46,8 @@ public:
 
 	void SetZoom(const float zoom);
 
+	void Camera::SetFocus(const float focus, MeshModel& model);
+
 	void Camera::SetEyePlace();
 	void SetCamTransformation();
 	void SetWorldTransformation();

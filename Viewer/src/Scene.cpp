@@ -97,10 +97,19 @@ void Scene::SetDrawNormals(bool draw, std::string genre, float normal_size)
 
 void Scene::SetActiveModelIndex(int index)
 {
-	// implementation suggestion...
 	if (index >= 0 && index < models.size())
 	{
 		activeModelIndex = index;
+	}
+}
+
+void Scene::SetActiveModelIndex(std::string name)
+{
+	for (int i = 0; i < models.size(); i++){
+		if (models[i]->GetModelName() == name) {
+			SetActiveModelIndex(i);
+			break;
+		}
 	}
 }
 

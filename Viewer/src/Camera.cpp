@@ -131,6 +131,12 @@ void Camera::SetZoom(const float zoom)
 
 }
 
+void Camera::SetFocus(const float focus, MeshModel& model)
+{
+	std::string name = "transalte";
+	SetCameraLookAt(eye, focus * model.GetCordinates(name), up);
+}
+
 const glm::mat4x4 Camera::GetViewTransformation() 
 {
 	//SetCameraLookAt(eye, at, up);
