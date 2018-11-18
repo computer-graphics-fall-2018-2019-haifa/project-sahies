@@ -5,7 +5,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <list>
+#include <iomanip>
+
+std::vector<glm::vec3> colors = { glm::vec3(0.87,0.58,0.98), glm::vec3(0.8 , 0.498039 , float(0.196078)), 
+glm::vec3(0,1,0),glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,0), glm::vec3(0,1,1) };
 
 MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, const std::string& modelName) :
 	modelName(modelName),
@@ -17,7 +20,8 @@ MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3
 	this->vertices = vertices;
 	this->faces = faces;
 	this->normals = normals;
-	SetColor({ rand() % 300 , rand() % 300,rand() % 300 });
+
+	SetColor(colors[rand() % 6]);
 }
 
 MeshModel::MeshModel(const MeshModel& model)
@@ -30,8 +34,10 @@ MeshModel::MeshModel(const MeshModel& model)
 	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
 	this->modelName = model.modelName;
 	this->matWorldTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
-	SetColor({ rand() % 300 , rand() % 300,rand() % 300 });
+	SetColor(colors[rand() % 6]);
 }
+
+
 
 MeshModel::~MeshModel()
 {
@@ -47,14 +53,20 @@ void MeshModel::SetWorldTransformation()
 	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
 }
 
- void MeshModel::SetNewVertices(std::vector<glm::vec3>& vertices)
+ void MeshModel::SetNewVertices(std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& n_vertices)
  {
 	 this->newVertices = vertices;
+	 this->newNormalVertices = n_vertices;
  }
 
  std::vector<glm::vec3> MeshModel::GetNewVertices()
  {
 	 return newVertices;
+ }
+
+ std::vector<glm::vec3> MeshModel::GetNewNormalVertices()
+ {
+	 return this->newNormalVertices;
  }
 
 void MeshModel::SetObjectTransformation()
@@ -178,11 +190,12 @@ const std::map<std::string, glm::vec3> MeshModel::GetCube() const
 	return cube;
 }
 
-void MeshModel::CreateCube(std::vector<glm::vec3>& vertices, float h, float w)
+void MeshModel::CreateCube(std::vector<glm::vec3>& vertices, float h, float w, glm::mat4& modelTransformations)
 {
-	glm::vec3 center_shift = glm::vec3(h, w, 0);
-	glm::vec3 max = findMax(vertices) + center_shift;
-	glm::vec3 min = findMin(vertices) + center_shift;
+	glm::vec4 center_shift = glm::vec4(h, w, 0,0);
+
+	glm::vec3 max = findMax(vertices);
+	glm::vec3 min = findMin(vertices);
 
 	float right = max.x;
 	float left = min.x;
@@ -192,17 +205,17 @@ void MeshModel::CreateCube(std::vector<glm::vec3>& vertices, float h, float w)
 	float back = max.z;
 	
 
-	cube["lbf"] = glm::vec3(left, bottom, front);
-	cube["rbf"] = glm::vec3(right, bottom, front);
+	cube["lbf"] = modelTransformations * glm::vec4(left, bottom, front, 1) + center_shift;
+	cube["rbf"] = modelTransformations * glm::vec4(right, bottom, front, 1) + center_shift;
 
-	cube["ltf"] = glm::vec3(left, top, front);
-	cube["rtf"] = glm::vec3(right, top, front);
+	cube["ltf"] = modelTransformations * glm::vec4(left, top, front, 1) + center_shift;
+	cube["rtf"] = modelTransformations * glm::vec4(right, top, front, 1) + center_shift;
 
-	cube["lbb"] = glm::vec3(left, bottom, back);
-	cube["rbb"] = glm::vec3(right, bottom, back);
+	cube["lbb"] = modelTransformations * glm::vec4(left, bottom, back, 1) + center_shift;
+	cube["rbb"] = modelTransformations * glm::vec4(right, bottom, back, 1) + center_shift;
 
-	cube["ltb"] = glm::vec3(left, top, back);
-	cube["rtb"] = glm::vec3(right, top, back);
+	cube["ltb"] = modelTransformations * glm::vec4(left, top, back, 1) + center_shift;
+	cube["rtb"] = modelTransformations * glm::vec4(right, top, back, 1) + center_shift;
 
 }
 

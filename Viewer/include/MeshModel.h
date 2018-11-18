@@ -20,6 +20,7 @@ private:
 	std::vector<glm::vec3> cordinatesTransformations;
 	std::map<std::string, glm::vec3> cube;
 	std::vector<glm::vec3> newVertices;
+	std::vector<glm::vec3> newNormalVertices;
 
 protected:
 	glm::mat4x4 worldTransform; 
@@ -56,12 +57,13 @@ public:
 	const std::vector<glm::vec3> MeshModel::GetVertices() const;
 	const std::vector<Face> MeshModel::GetFaces() const;
 	const std::vector<glm::vec3> GetNormals() const;
-	void MeshModel::CreateCube(std::vector<glm::vec3>& vertices,float h, float w);
+	void MeshModel::CreateCube(std::vector<glm::vec3>& vertices,float h, float w, glm::mat4& modelTransformations);
 	const glm::mat4x4& GetWorldTransformation() const;
 	const glm::mat4x4& GetObjectTransformation() const;
 	 void InitCordinate() ;
-	 void SetNewVertices(std::vector<glm::vec3>& vertices);
+	 void MeshModel::SetNewVertices(std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& n_vertices);
 	 std::vector<glm::vec3> GetNewVertices();
-
+	 std::vector<glm::vec3> GetNewNormalVertices();
+	
 	// Add more methods/functionality as needed...
 };
