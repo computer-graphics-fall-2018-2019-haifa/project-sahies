@@ -57,6 +57,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	std::string projectionType, draw_genre;
 	int e;
 
+	
 	if (scene.GetCameraCount() == 0) {
 		std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
 		cam_obj->SetModelName("Camera" + std::to_string(CameraCounter));
@@ -67,7 +68,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		change = 1;
 	}
 
-
+	
 
 	Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
 	std::vector<Camera> cameras = scene.GetCameras();
