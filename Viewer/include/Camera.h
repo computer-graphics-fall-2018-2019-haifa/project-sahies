@@ -15,11 +15,13 @@ private:
 	float zoom;
 
 	std::string projectionType;
-	glm::vec3 eye;
-	glm::vec3 at;
-    glm::vec3 up;
+
 
 public:
+
+	glm::vec3 eye;
+	glm::vec3 at;
+	glm::vec3 up;
 
 	float left;
 	float right;
@@ -29,7 +31,7 @@ public:
 	float zFar;
 	float fovy;
 	float aspect;
-
+	float height;
 
 	Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, MeshModel& model);
 	~Camera();
@@ -57,6 +59,6 @@ public:
 	const glm::mat4 GetProjection() const;
 	void Camera::SetFocus(const float focus, MeshModel& model);
 	void Camera::SetPerspectiveProjection();
-
+	void Camera::SetOrthographicProjection();
 	// Add more methods/functionality as needed...
 };

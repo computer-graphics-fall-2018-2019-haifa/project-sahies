@@ -66,9 +66,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	}
 
 
-
-	Camera camera = scene.GetCamera(scene.GetActiveCameraIndex());
 	std::vector<Camera> cameras = scene.GetCameras();
+	static std::shared_ptr<Camera> camera = std::make_shared<Camera>(scene.GetCamera(scene.GetActiveCameraIndex()));
+	
 
 	std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
 	std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
@@ -105,7 +105,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
 			}
 			ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
-			camera = scene.GetCamera(scene.GetActiveCameraIndex());
+			camera = std::make_shared<Camera>(scene.GetCamera(scene.GetActiveCameraIndex()));
 			// Need to change scene veiwport here
 			delete[] c_cameras_names;
 		}
@@ -115,13 +115,53 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		//Near, Far and Ratio Slide Bar
 		static float _near = 1.0f, _far = 1.0f, _ratio = 1.0f;
 		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
-			camera.zNear = _near;
+			camera->zNear = _near;
 		}
 		if (ImGui::SliderFloat("Far", &_far, 0.0f, 250.0f))
-			camera.zFar = _far;
+			camera->zFar = _far;
 		if(ImGui::SliderFloat("Ratio", &_ratio, 0.0f, 250.0f))
-			camera.aspect = _ratio;
+			camera->aspect = _ratio;
 
+		static float _eye[3] = {
+			camera->eye.x,
+			camera->eye.y,
+			camera->eye.z
+		};
+		if (ImGui::InputFloat3("Eye", _eye)) {
+			camera->eye.x = _eye[0];
+			camera->eye.y = _eye[1];
+			camera->eye.z = _eye[2];
+			change = 1;
+			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
+		}
+
+		static float _at[3] = {
+			camera->at.x,
+			camera->at.y,
+			camera->at.z
+		};
+		if (ImGui::InputFloat3("At", _at)) {
+			camera->at.x = _at[0];
+			camera->at.y = _at[1];
+			camera->at.z = _at[2];
+			change = 1;
+			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
+
+		}
+
+		static float _up[3] = {
+			camera->up.x,
+			camera->up.y,
+			camera->up.z
+		};
+		if (ImGui::InputFloat3("Up", _up)) {
+			camera->up.x = _up[0];
+			camera->up.y = _up[1];
+			camera->up.z = _up[2];
+			change = 1;
+			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
+
+		}
 		
 
 
@@ -143,19 +183,21 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			//Fovy Slide Bar
 			static float fovy = 1.0f;
 			if (ImGui::SliderFloat("Fovy", &fovy, 0.0f, 250.0f)) {
-				camera.fovy = fovy;
+				camera->fovy = fovy;
 				change = 1;
 			}
-			camera.SetPerspectiveProjection();
+			camera->SetPerspectiveProjection();
 		}
 		else
 		{
 			//Height Slide Bar
 			static float height = 2.5f;
 			if (ImGui::SliderFloat("Height", &height, 0.0f, 250.0f))
-				//camera.h = height;
+			{
+				camera->height = height;
 				change = 1;
-			camera.SetOrthographicProjection(height, _ratio, _near, _far);
+			}
+			camera->SetOrthographicProjection();
 		}
 
 		
@@ -175,7 +217,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		//Focus Slide Bar
 		static float focus = 0;
 		if (ImGui::SliderFloat("Focus", &focus, 0.0f, 250.0f)) {
-			camera.SetFocus(focus, *model);
+			camera->SetFocus(focus, *model);
 			change = 1;
 		}
 
@@ -410,6 +452,18 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			ImGui::EndMainMenuBar();
 		}
 	}
+
+
+	for (int i = 0; i < scene.cameras.size(); i++) {
+		if (scene.cameras[i].GetModelName() == camera->GetModelName()) {
+			scene.cameras[i] = *camera;
+			break;
+		}
+	}
+
+
+	//scene.cameras = cameras;
+
 }
 
 void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name, std::string genreTransformation, int& change)

@@ -150,7 +150,8 @@ std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, g
 
 void Renderer::Render(const Scene& scene, int& change )
 {
-	change = 1;
+	//change = 1;
+
 	std::string draw_genre;
 
 	if (scene.GetModelCount())
@@ -218,7 +219,7 @@ glm::mat4 Renderer::UpdateChangesCamera(Camera& active_camera)
 	active_camera.SetEyePlace();
 	active_camera.SetWorldTransformation();
 	active_camera.SetObjectTransformation();
-	return active_camera.GetProjection() *  glm::inverse(active_camera.GetViewTransformation()) * active_camera.GetWorldTransformation() * active_camera.GetObjectTransformation();
+	return /*active_camera.GetProjection() **/  glm::inverse(active_camera.GetViewTransformation()) * active_camera.GetWorldTransformation() * active_camera.GetObjectTransformation();
 
 }
 
@@ -227,7 +228,8 @@ glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, Camera
 {
 	model->SetWorldTransformation();
 	model->SetObjectTransformation();
-	return active_camera.GetProjection() * glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
+
+	return/* active_camera.GetProjection()**/ glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
 }
 
 

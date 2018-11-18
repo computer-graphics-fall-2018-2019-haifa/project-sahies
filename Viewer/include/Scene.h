@@ -14,12 +14,13 @@
  */
 class Scene {
 private:
-	std::vector<std::shared_ptr<MeshModel>> models;
-	std::vector<Camera> cameras;
+
 
 
 
 public:
+	std::vector<std::shared_ptr<MeshModel>> models;
+	std::vector<Camera> cameras;
 	Scene();
 
 	int activeCameraIndex;
@@ -36,6 +37,7 @@ public:
 
 	const std::shared_ptr<MeshModel> Scene::GetModel(int index) const;
 	const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const;
+	const std::vector<std::shared_ptr<Camera>> Scene::GetCamerasPtr() const;
 	void AddCamera(const Camera& camera);
 	const int GetCameraCount() const;
 	const std::vector<Camera> Scene::GetCameras() const;

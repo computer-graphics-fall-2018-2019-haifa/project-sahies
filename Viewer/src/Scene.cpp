@@ -33,6 +33,16 @@ const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const
 	return models;
 }
 
+const std::vector<std::shared_ptr<Camera>> Scene::GetCamerasPtr() const
+{
+	std::vector<std::shared_ptr<Camera>> vec;
+	for (auto cam : cameras) {
+		vec.push_back(std::make_shared<Camera>(cam));
+	}
+	return vec;
+}
+
+
 const std::vector<Camera> Scene::GetCameras() const
 {
 	return cameras;

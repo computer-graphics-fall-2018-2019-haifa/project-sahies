@@ -11,17 +11,20 @@ Camera::Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, M
 	zoom(1.0),
 	MeshModel(model)
 {
-
+	this->eye = eye;
+	this->at = at;
+	this->up = up;
 	SetCameraLookAt(eye, at, up);
 	this->projectionType = "Ortho";
 	this->left = -1;
 	this->right = 1;
 	this->bottom = -1;
 	this->top = 1;
-	this->zNear = 1;
-	this->zFar = 1;
-	this->fovy = 1;
-	this->aspect = 1;
+	this->zNear = 10;
+	this->zFar = 100;
+	this->fovy = 2.5;
+	this->aspect = 1.5;
+	this->height = 1;
 	SetOrthographicProjection(2.5, 1, 10, 150);
 }
 
@@ -116,10 +119,10 @@ void Camera::SetPerspectiveProjection(
 	glm::mat4 mat = {
 		(2 * _near) / (r - l), 0, (r + l) / (r - l), 0,
 		0, (2 * _near) / (t - b), (t + b) / (t - b), 0,
-		0, 0, -(_far + _near) / (_far - _near), -(2 * _far * _near) / (_far - _near),
+		0, 0, -1*(_far + _near) / (_far - _near), -2*(_far * _near) / (_far - _near),
 		0, 0, -1, 0
 	};
-	this->projectionTransformation = glm::transpose(mat);
+	this->projectionTransformation = (mat);
 }
 
 void Camera::SetZoom(const float zoom)
@@ -140,6 +143,9 @@ const glm::mat4x4 Camera::GetViewTransformation()
 	return viewTransformation;
 }
 
+void Camera::SetOrthographicProjection() {
+	SetOrthographicProjection(height, aspect, zNear, zFar);
+}
 
 void Camera::SetPerspectiveProjection()
 {
