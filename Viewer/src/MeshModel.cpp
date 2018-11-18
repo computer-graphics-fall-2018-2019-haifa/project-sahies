@@ -39,7 +39,7 @@ MeshModel::~MeshModel()
 }
 
 void MeshModel::SetWorldTransformation()
-{
+{							//translation matrix      * rotation matrix				* scale matrix
 	this->worldTransform = matWorldTransformations[2] * matWorldTransformations[0] * matWorldTransformations[1];
 }
 
@@ -119,7 +119,7 @@ void MeshModel::setMatrix(const glm::mat4 matrix, std::string name, std::string 
 			this->matWorldTransformations[2] = matrix;
 		else if (name == "scale")
 			this->matWorldTransformations[0] = matrix;
-		else
+		else //rotate
 			this->matWorldTransformations[1] = matrix;
 	}
 	else {
@@ -138,7 +138,7 @@ void MeshModel::SetCordinates(const glm::vec3& cordinates, std::string& name)
 		this->cordinatesTransformations[0] += cordinates;
 	if (name == "translate")
 		this->cordinatesTransformations[2] += cordinates;
-	else 
+	else //rotate
 		this->cordinatesTransformations[1] += cordinates;
 }
 

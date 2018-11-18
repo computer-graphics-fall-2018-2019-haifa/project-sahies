@@ -52,7 +52,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	std::string camera_path = "C:\\project-sahies\\project-sahies\\Data\\camera.obj";
 	static int CameraCounter = 0;
 	static int counter = 0;
-	static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f, CAM_x = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
+	static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, CAM_y = 0.0f, CAM_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
 	zoom, left, right, bottom, top, zNear, zFar, fovy, aspect, normal_size;
 	std::string projectionType, draw_genre;
 	int e;
@@ -107,6 +107,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
 			}
 			ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
+			camera = scene.GetCamera(scene.GetActiveCameraIndex());
+			// Need to change scene veiwport here
 			delete[] c_cameras_names;
 		}
 
@@ -127,7 +129,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			//Zoom/Fovy Slide Bar
 			if (ImGui::SliderFloat("Fovy", &scale_all, 0.0f, 250.0f))
 				for (auto m : models)
-					SubmitTransform(m, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+					SubmitTransform(m, renderer, scale_all, scale_all, scale_all, "scale", "world", change);
 
 			//Focus Slide Bar
 			static float focus =0;
@@ -164,18 +166,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			*/
 
 		// Scale only one axis
-		if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
+		/*if (ImGui::SliderFloat("scale_x", &scale_x, 0.0f, 250.0f) ||
 			ImGui::SliderFloat("scale_y", &scale_y, 0.0f, 250.0f) ||
 			ImGui::SliderFloat("scale_z", &scale_z, 0.0f, 250.0f))
 			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
 
-
-
-
-		if (ImGui::SliderFloat("x", &x, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("y", &y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("z", &z, -20.0f, 20.0f))
-			SubmitTransform(model, renderer, x, y, z, "rotate", "object", change);
+*/
 
 
 
@@ -184,12 +180,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 
 		static float CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f, CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
-
-		if (ImGui::SliderFloat("CAMscale_x", &CAMscale_x, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("CAMscale_y", &CAMscale_y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("CAMscale_z", &CAMscale_z, -20.0f, 20.0f))
+		if (ImGui::SliderFloat("CAMscale_x", &CAMscale_x, -20.0f, 20.0f) )
+			//ImGui::SliderFloat("CAMscale_y", &CAMscale_y, -20.0f, 20.0f) ||
+			//ImGui::SliderFloat("CAMscale_z", &CAMscale_z, -20.0f, 20.0f))
 		{
-			SubmitTransform(model, renderer, CAMscale_x, CAMscale_y, CAMscale_z, "scale", "world", change);
+			SubmitTransform(model, renderer, CAMscale_x, CAMscale_x, CAMscale_x, "scale", "world", change);
 			CAMscale_x = 1.0f, CAMscale_y = 1.0f, CAMscale_z = 1.0f;
 		}
 
@@ -201,25 +196,19 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			CAMtr_x = 0.0f, CAMtr_y = 0.0f, CAMtr_z = 0.0f;
 		}
 
-
+		static float CAM_x = 0.0f;
 		if (ImGui::SliderFloat("CAM_x", &CAM_x, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("CAM_y", &CAM_y, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("CAM_z", &CAM_z, -20.0f, 20.0f))
 		{
-			SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate", "world", change);
-			CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
+			for (auto model : models) {
+				SubmitTransform(model, renderer, CAM_x, CAM_z, CAM_z, "rotate", "world", change);
+				CAM_x = 0.0f, CAM_y = 0.0f, CAM_y = 0.0f;
+			}
+			
 		}
 
-		if (ImGui::SliderFloat("zoom", &zoom, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("left", &left, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("right", &right, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("bottom", &bottom, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("top", &top, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("zNear", &zNear, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("zFar", &zFar, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("fovy", &fovy, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("aspect", &aspect, -20.0f, 20.0f))
-			change = 1;
+		
 
 	
 
@@ -246,15 +235,32 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			delete[] c_models_names;
 		}
 
+		//Not needed
+	/*	if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
+			SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object", change);*/
 
-		if (ImGui::SliderFloat("tr_all", &tr_all, -20.0f, 20.0f))
-			SubmitTransform(model, renderer, tr_all, tr_all, tr_all, "translate", "object", change);
-
-		if (ImGui::SliderFloat("tr_x", &tr_x, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("tr_y", &tr_y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("tr_z", &tr_z, -20.0f, 20.0f))
+		static float  tr_x = 0.0f, tr_y = 0.0f, tr_z = 0.0f;
+		if (ImGui::DragFloat("translate x", &tr_x, 0.05f) ||
+			ImGui::DragFloat("translate y", &tr_y, 0.05f) ||
+			ImGui::DragFloat("translate z", &tr_z, 0.05f))
 			SubmitTransform(model, renderer, tr_x, tr_y, tr_z, "translate", "object", change);
 
+		//rotate model around axis
+		static float xrotate = 0.0f, yrotate = 0.0f, zrotate = 0.0f;
+		if (ImGui::DragFloat("rotate around x", &xrotate, 0.5f) ||
+			ImGui::DragFloat("rotate around y", &yrotate, 0.5f) ||
+			ImGui::DragFloat("rotate around z", &zrotate, 0.5f))
+		{
+			if (xrotate >= 180 || xrotate <= -180) xrotate = 0;
+			if (yrotate >= 360 || yrotate <= -360) yrotate = 0;
+			if (zrotate >= 180 || zrotate <= -180) zrotate = 0;
+			SubmitTransform(model, renderer, xrotate, yrotate, zrotate, "rotate", "object", change);
+		}
+	
+
+		
+
+		/*     Normals     */
 		if (ImGui::Button("Draw Normals")) {
 			toDrawNormals += mul;
 			mul *= -1;
@@ -276,7 +282,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 	}
 
-	if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+	if (ImGui::Button("Button"))  // Buttons return true when clicked (most widgets return true when edited/activated)
 		counter++;
 	ImGui::SameLine();
 	ImGui::Text("counter = %d", counter);
@@ -343,8 +349,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name, std::string genreTransformation, int& change)
 {
 	model->SetTransform(name);
-	model->SetCordinates({ x, y, z }, name);
+	model->SetCordinates(glm::vec3(x, y, z), name);
 	renderer.SetTransformation(*model, genreTransformation);
+
+	// the reason z models cant rotate around z axis..
 	model->InitCordinate();
 	change = 1;
 }
