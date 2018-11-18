@@ -68,6 +68,23 @@ const Camera Scene::GetCamera(int index) const
 		return cameras[index];
 }
 
+std::vector<std::string>Scene::GetModelsNames()
+{
+	std::vector<std::string> names;
+	for (int i = 0; i < GetModelCount(); i++)
+		names.push_back(models[i]->GetModelName());
+	return names;
+}
+
+
+std::vector<std::string>Scene::GetCamerasNames()
+{
+	std::vector<std::string> names;
+	for (int i = 0; i < GetCameraCount(); i++)
+		names.push_back(cameras[i].GetModelName());
+	return names;
+}
+
 
 
 void Scene::SetDrawNormals(bool draw, std::string genre, float normal_size)
@@ -98,4 +115,14 @@ const float Scene::GetDrawNormals(std::string& type) const
 		return normal_size;
 	}
 	return 0;
+}
+
+void Scene::SetActiveModelIndex(std::string name)
+{
+	for (int i = 0; i < models.size(); i++) {
+		if (models[i]->GetModelName() == name) {
+			SetActiveModelIndex(i);
+			break;
+		}
+	}
 }

@@ -150,65 +150,64 @@ std::vector<glm::vec3> Renderer::VerticesXmat(std::vector<glm::vec3> vertices, g
 
 void Renderer::Render(const Scene& scene, int& change)
 {
-	std::vector<glm::vec3> new_vec_n, new_vec;
 	std::string draw_genre;
 
 	if (scene.GetModelCount())
 	{
 		Camera active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
-		if (change) 
-		{
+		if (change) {
 			glm::mat4 cameraTransformations = UpdateChangesCamera(active_camera);
-
-
-			for (auto model : scene.GetModels())
-			{
+			for (auto model : scene.GetModels()) {
 				glm::mat4 modelTransformations = UpdateChangesModel(model, active_camera);
-
-
 				if (active_camera.GetModelName() == model->GetModelName()) {
-					new_vec_n = VerticesXmat(active_camera.GetNormals(), cameraTransformations);
-					new_vec = VerticesXmat(active_camera.GetVertices(), cameraTransformations);
-					model->SetNewVertices(new_vec, new_vec_n);
+					UpdateVertecisByTransformations(active_camera, cameraTransformations);
 					continue;
-				}
-
-				else {
-					new_vec_n = VerticesXmat(model->GetNormals(), modelTransformations);
-					new_vec = VerticesXmat(model->GetVertices(), modelTransformations);
-					model->SetNewVertices(new_vec, new_vec_n);
+				} else {
+					UpdateVertecisByTransformations(*model, modelTransformations);
 					//if something -> ;
-					std::vector<glm::vec3> m = model->GetVertices();
-					model->CreateCube(m, viewportWidth / 2, viewportHeight / 2, modelTransformations);
+					model->CreateCube(std::vector<glm::vec3>(model->GetVertices()), viewportWidth / 2, viewportHeight / 2, modelTransformations);
 					DrawCube(model);
 				}
 
-				for (auto face : model->GetFaces())
-				{
-					DrawTriangle(FromVecToTriangle(face, new_vec), model->GetColor());
-					//if (float normal_size = scene.GetDrawNormals(draw_genre))
-						DrawNormals(face, new_vec_n, new_vec, "face", 0.3);
-			}
-			}
-		} else
-		{
-			for (auto model : scene.GetModels()) {
-				if (active_camera.GetModelName() == model->GetModelName())
-					continue;
 				for (auto face : model->GetFaces()) {
 					DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), model->GetColor());
-					//if (float normal_size = scene.GetDrawNormals(draw_genre)) 
+					//if (float normal_size = scene.GetDrawNormals(draw_genre))
 						DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), "face", 0.3);
-					
-					//if something -> ;
-					DrawCube(model);
 				}
 			}
-		}
+		} else
+			WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>(scene.GetModels()), active_camera);
+		
 		change = 0;
 	}
 }
 
+
+
+
+void Renderer::UpdateVertecisByTransformations(MeshModel& model, glm::mat4& transformation)
+{
+	std::vector<glm::vec3> new_vec_n, new_vec;
+	new_vec_n = VerticesXmat(model.GetNormals(), transformation);
+	new_vec = VerticesXmat(model.GetVertices(), transformation);
+	model.SetNewVertices(new_vec, new_vec_n);
+}
+
+void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& models, Camera& active_camera)
+{
+	for (auto model : models) {
+		if (active_camera.GetModelName() == model->GetModelName())
+			continue;
+		for (auto face : model->GetFaces()) {
+			DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), model->GetColor());
+			//if (float normal_size = scene.GetDrawNormals(draw_genre)) 
+			DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), "face", 0.3);
+
+			//if something -> ;
+			DrawCube(model);
+		}
+	}
+}
 
 glm::mat4 Renderer::UpdateChangesCamera(Camera& active_camera)
 {

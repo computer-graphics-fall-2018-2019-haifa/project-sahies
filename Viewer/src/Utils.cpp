@@ -54,9 +54,9 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 {
 	glm::mat4 mat, matX, matY, matZ;
 	const float pi = 3.14159265;
-	float thetaX = pi / 180 * cordinates.x;
-	float thetaY = pi / 180 * cordinates.y;
-	float thetaZ = pi / 180 * cordinates.z;
+	float thetaX = (pi / 180) * cordinates.x;
+	float thetaY = (pi / 180) * cordinates.y;
+	float thetaZ = (pi / 180) * cordinates.z;
 
 	if (transformation == "scale")
 		mat = {
@@ -73,25 +73,25 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 			0, 0, 1.0f, cordinates.z,
 			0, 0, 0, 1.0f
 		};
-		//mat = glm::transpose(mat);
+		mat = glm::transpose(mat);
 	}
 
 	else if (transformation == "rotate") {
 		matX = {
 			1 ,0 ,0 ,0,
-			0, cos(thetaX), -sin(thetaX), 0,
-			0, sin(thetaX), cos(thetaX), 0,
+			0, glm::cos(thetaX), -1* glm::sin(thetaX), 0,
+			0, glm::sin(thetaX), glm::cos(thetaX), 0,
 			0, 0,0, 1
 		};
 		matY = glm::mat4(
-			cos(thetaY), 0, sin(thetaY), 0,
+			glm::cos(thetaY), 0, glm::sin(thetaY), 0,
 			0, 1, 0, 0,
-			-sin(thetaY), 0, cos(thetaY), 0,
+			-1* glm::sin(thetaY), 0, glm::cos(thetaY), 0,
 			0, 0, 0, 1
 		);
 		matZ = glm::mat4(
-			cos(thetaZ), -sin(thetaZ), 0, 0,
-			sin(thetaZ), cos(thetaZ), 0, 0,
+			glm::cos(thetaZ), -1* glm::sin(thetaZ), 0, 0,
+			glm::sin(thetaZ), glm::cos(thetaZ), 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		);
@@ -109,8 +109,8 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 
 
 
-	return glm::transpose(mat);
-	//return mat;
+	return mat;
+	//return transpose(mat);
 }
 
 
@@ -191,6 +191,7 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 	 int c = face.GetNormalIndex(2) - 1;
 	 return glm::vec3(a, b, c);
  }
+
 
 
 MeshModel Utils::LoadMeshModel(const std::string& filePath)

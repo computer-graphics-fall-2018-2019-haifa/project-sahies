@@ -17,8 +17,6 @@ private:
 	std::vector<std::shared_ptr<MeshModel>> models;
 	std::vector<Camera> cameras;
 
-	int activeCameraIndex;
-	int activeModelIndex;
 
 	bool toDrawNormals = 0;
 	std::string draw_genre;
@@ -26,6 +24,9 @@ private:
 
 public:
 	Scene();
+
+	int activeCameraIndex;
+	int activeModelIndex;
 
 	void AddModel(const std::shared_ptr<MeshModel>& model);
 	void Scene::PopModel();
@@ -40,12 +41,15 @@ public:
 	void SetActiveCameraIndex(int index);
 	const int GetActiveCameraIndex() const;
 	const Camera GetCamera(int index) const;
+	std::vector<std::string>Scene::GetModelsNames();
+	std::vector<std::string>Scene::GetCamerasNames();
+
 	
 
 	void SetDrawNormals(bool draw, std::string genre, float normal_size);
 	void SetActiveModelIndex(int index);
 	const int GetActiveModelIndex() const;
 	const float GetDrawNormals(std::string& type) const;
-
+	void Scene::SetActiveModelIndex(std::string name);
 	// Add more methods as needed...
 };

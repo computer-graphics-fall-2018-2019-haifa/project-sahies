@@ -152,6 +152,6 @@ const glm::mat4 Camera::GetProjection() const
 
 
 void Camera::SetEyePlace() {
-	glm::mat4 mat = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z)) *  Utils::GetMatrix("rotate", at);
+	glm::mat4 mat = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z)) *  Utils::GetMatrix("rotate", up) *  Utils::GetMatrix("at", up);
 	this->vertices = Renderer::VerticesXmat(vertices,mat);
 }
