@@ -16,8 +16,6 @@
 
 bool showDemoWindow = false;
 bool ScaleWindow = false;
-bool toDrawNormals = 0;
-int mul = 1;
 
 
 
@@ -49,11 +47,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
-	std::string camera_path = "C:\\Users\\Berger\\Documents\\project-sahies\\Data\\camera.obj";
+	std::string camera_path = "C:\\project-sahies\\project-sahies\\Data\\camera.obj";
 	static int CameraCounter = 0;
 	static int counter = 0;
-	static float scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f, world_y = 0.0f, world_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
-		zoom, left, right, bottom, top, zNear, zFar, fovy, aspect, normal_size;
+	static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, world_y = 0.0f, world_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0,
+		zoom, left, right, bottom, top, zFar, aspect, normal_size;
 	std::string projectionType, draw_genre;
 	int e;
 
@@ -114,6 +112,20 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 
 
+		//Near, Far and Ratio Slide Bar
+		static float _near = 1.0f, _far = 1.0f, _ratio = 1.0f;
+		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
+			camera.zNear = _near;
+		}
+		if (ImGui::SliderFloat("Far", &_far, 0.0f, 250.0f))
+			camera.zFar = _far;
+		if(ImGui::SliderFloat("Ratio", &_ratio, 0.0f, 250.0f))
+			camera.aspect = _ratio;
+
+		
+
+
+
 		enum Mode
 		{
 			Perspective,
@@ -121,44 +133,52 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		};
 
 		static int mode = 0;
-		if (ImGui::RadioButton("Perspective", mode == Perspective)) { mode = Perspective; } ImGui::SameLine(); //TODO change = 1;
+		if (ImGui::RadioButton("Perspective", mode == Perspective)) { mode = Perspective; } ImGui::SameLine();
 		if (ImGui::RadioButton("Orthographic", mode == Orthographic)) { mode = Orthographic; }
 
-		if (mode == Perspective) {// TODO change = 1;
-			camera.SetPerspectiveProjection(45, 1, 100, 1000);
-
-			//Zoom/Fovy Slide Bar
-		//if (ImGui::SliderFloat("Fovy", &fovy, 0.0f, 250.0f))
-			//for (auto m : models)
-				//SubmitTransform(m, renderer, scale_all, scale_all, scale_all, "scale", "world", change);
-
-			//Focus Slide Bar
-			/*static float focus = 0;
-			if (ImGui::SliderFloat("Focus", &focus, 0.0f, 250.0f))
-				camera.SetFocus(focus, *model);*/
 
 
-			//camera.SetPerspectiveProjection(fovy, aspect, zNear, zFar);
+
+		if (mode == Perspective) {
+			//Fovy Slide Bar
+			static float fovy = 1.0f;
+			if (ImGui::SliderFloat("Fovy", &fovy, 0.0f, 250.0f)) {
+				camera.fovy = fovy;
+				change = 1;
+			}
+			camera.SetPerspectiveProjection();
 		}
 		else
 		{
-			camera.SetOrthographicProjection(1, 1, 10, 150);
-
 			//Height Slide Bar
-			if (ImGui::SliderFloat("Height", &scale_all, 0.0f, 250.0f))
-				SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
-			//camera.SetOrthographicProjection(fovy, aspect, zNear, zFar);
+			static float height = 2.5f;
+			if (ImGui::SliderFloat("Height", &height, 0.0f, 250.0f))
+				//camera.h = height;
+				change = 1;
+			camera.SetOrthographicProjection(height, _ratio, _near, _far);
 		}
 
+		
 
-		//Near Slide Bar
-		if (ImGui::SliderFloat("Near", &scale_all, 0.0f, 250.0f))
-			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+		
 
 
-		//Far Slide Bar
-		if (ImGui::SliderFloat("Far", &scale_all, 0.0f, 250.0f))
-			SubmitTransform(model, renderer, scale_all, scale_all, scale_all, "scale", "object", change);
+		//Zoom Slide Bar
+		static float zoom = 0.0f;
+		if (ImGui::SliderFloat("Zoom", &zoom, 0.0f, 250.0f))
+			for (auto m : models)
+				SubmitTransform(m, renderer, zoom, zoom, zoom, "scale", "world", change);
+
+
+
+
+		//Focus Slide Bar
+		static float focus = 0;
+		if (ImGui::SliderFloat("Focus", &focus, 0.0f, 250.0f)) {
+			camera.SetFocus(focus, *model);
+			change = 1;
+		}
+
 
 
 
@@ -236,11 +256,15 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			delete[] c_models_names;
 		}
 
-		
-		if (ImGui::DragFloat("scale_all", &scale_all, 0.05f))
-			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
+		static float scale_model = 1.0f; //>0
+		if (ImGui::DragFloat("Scale model", &scale_model, 0.1f)) {
+			SubmitTransform(model, renderer, scale_model, scale_model, scale_model, "scale", "object", change);
+			scale_x = scale_model;
+			scale_y = scale_model;
+			scale_z = scale_model;
+		}
 
-		static float  scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f;
+		//	static float  scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f;
 		if (ImGui::DragFloat("scale x", &scale_x, 0.05f) ||
 			ImGui::DragFloat("scale y", &scale_y, 0.05f) ||
 			ImGui::DragFloat("scale z", &scale_z, 0.05f))
@@ -265,16 +289,50 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		}
 
 
+		/*     Draw Box     */
+		static bool drawBox = false;
+		ImGui::Checkbox("Draw bounding box", &drawBox);
+		if (drawBox) {
+			scene.toDrawBox = true;
+			change = 1;
+		}
+		else
+			scene.toDrawBox = false;
+
 
 
 		/*     Normals     */
-		if (ImGui::Button("Draw Normals")) {
-			toDrawNormals += mul;
-			mul *= -1;
-			change = 1;
+		static bool drawNormals = false;
+		ImGui::Checkbox("Draw Normals", &drawNormals);
+		if (drawNormals) {
+
+			enum norMode
+			{
+				Vertex,
+				Face
+			};
+			static int normals_mode = 0;
+			if (ImGui::RadioButton("Vertex", normals_mode == Vertex)) { normals_mode = Vertex; } ImGui::SameLine();
+			if (ImGui::RadioButton("Face", normals_mode == Face)) { normals_mode = Face; }
+			ImGui::SliderFloat("Normals size", &normal_size, 0.00f, 3.0f);
+
+			if (normals_mode == Vertex) {// TODO change = 1;
+				change = 1;
+				scene.SetDrawNormals(true, "vertex", normal_size);
+			}
+			if (normals_mode == Face) {// TODO change = 1;
+				change = 1;
+				scene.SetDrawNormals(true, "face", normal_size);
+			}
+
 		}
-		if (toDrawNormals) {
-			ImGui::SliderFloat("normal_size", &normal_size, 0.001f, 1.0f);
+		else 
+			scene.SetDrawNormals(false, "vertex", normal_size);
+
+
+
+		/*if (toDrawNormals) {
+			
 
 			ImGui::RadioButton("face", &e, 0); ImGui::SameLine();
 			ImGui::RadioButton("vertex", &e, 1);
@@ -284,10 +342,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 				draw_genre = "face";
 			scene.SetDrawNormals(toDrawNormals, draw_genre, normal_size);
 		}
-
+		*/
 
 
 	}
+	
 
 	if (ImGui::Button("Button"))  // Buttons return true when clicked (most widgets return true when edited/activated)
 		counter++;

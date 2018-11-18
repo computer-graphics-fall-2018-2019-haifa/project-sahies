@@ -18,15 +18,17 @@ private:
 	std::vector<Camera> cameras;
 
 
-	bool toDrawNormals = 0;
-	std::string draw_genre;
-	float normal_size;
 
 public:
 	Scene();
 
 	int activeCameraIndex;
 	int activeModelIndex;
+
+	bool toDrawNormals = false;
+	bool toDrawBox = false;
+	std::string draw_genre;
+	float normal_size;
 
 	void AddModel(const std::shared_ptr<MeshModel>& model);
 	void Scene::PopModel();

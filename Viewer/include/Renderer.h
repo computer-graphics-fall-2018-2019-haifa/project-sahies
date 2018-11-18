@@ -47,7 +47,7 @@ public:
 	std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec);
 	glm::mat4 Renderer::UpdateChangesCamera(Camera& active_camera);
 	glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, Camera& active_camera);
-	void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& models, Camera& active_camera);
+	void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& models, Camera& active_camera, bool tdn, std::string genere, float ns,bool db);
 	void Renderer::UpdateVertecisByTransformations(MeshModel& model, glm::mat4& transformation);
 
 	// Add more methods/functionality as needed...

@@ -18,11 +18,11 @@ Camera::Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, M
 	this->right = 1;
 	this->bottom = -1;
 	this->top = 1;
-	this->zNear = -100;
-	this->zFar = 100;
+	this->zNear = 1;
+	this->zFar = 1;
 	this->fovy = 1;
 	this->aspect = 1;
-	SetOrthographicProjection(1, 1, 10, 150);
+	SetOrthographicProjection(2.5, 1, 10, 150);
 }
 
 Camera::~Camera()
@@ -45,19 +45,14 @@ void Camera::SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const gl
 	glm::mat4 c = glm::mat4(x4, y4, z4, t);
 
 
-	glm::mat4 translate_eye = Utils::GetMatrix("translate", -1*(eye.x), -1*(eye.y), -1*( eye.z));
+	/*glm::mat4 translate_eye = Utils::GetMatrix("translate", -1*(eye.x), -1*(eye.y), -1*( eye.z));
 	viewTransformation = c * glm::transpose(translate_eye);
-	//glm::mat4 translate_eye = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z));
-	//glm::mat4 c = {
-	//	x.x, x.y, x.z, 0,
-	//	y.x, y.y, y.z, 0,
-	//	z.x, z.y, z.z, 0,
-	//	-1*eye.x, -1*eye.y, -1*eye.z, 1
-	//};
 	viewTransformation = translate_eye * glm::inverse(c);
+	*/
 
-
-
+	glm::mat4 m(1);
+	m[3] -= glm::vec4(eye,1) -glm::vec4(0, 0, 0, 1);
+	this->viewTransformation = glm::transpose(c)*m;
 }
 
 
@@ -99,7 +94,7 @@ void Camera::SetOrthographicProjection(
 			0, 0, 2.0 / (_near - _far), -(_far + _near) / (_far - _near),
 			0, 0,0, 1
 	};
-	this->projectionTransformation = glm::transpose(mat);
+	this->projectionTransformation = mat;
 }
 
 void Camera::SetPerspectiveProjection(
@@ -109,8 +104,9 @@ void Camera::SetPerspectiveProjection(
 	const float _far)
 {
 
+	const float pi = 3.14159265;
 	// shear * scale to make 45 angle * divide by z
-	float height = (_far - _near) * tan(fovy * M_PI/ 180.0);
+	float height = (_far - _near) * glm::tan((fovy * pi)/ 180.0);
 	float width = aspectRatio * height;
 	float t = 0.5 * height;
 	float b = -0.5 * height;
@@ -123,7 +119,7 @@ void Camera::SetPerspectiveProjection(
 		0, 0, -(_far + _near) / (_far - _near), -(2 * _far * _near) / (_far - _near),
 		0, 0, -1, 0
 	};
-	this->projectionTransformation = glm::transpose(glm::inverse(mat));
+	this->projectionTransformation = glm::transpose(mat);
 }
 
 void Camera::SetZoom(const float zoom)
@@ -144,6 +140,11 @@ const glm::mat4x4 Camera::GetViewTransformation()
 	return viewTransformation;
 }
 
+
+void Camera::SetPerspectiveProjection()
+{
+	SetPerspectiveProjection(fovy,aspect,zNear,zFar);
+}
 
 const glm::mat4 Camera::GetProjection() const
 {
