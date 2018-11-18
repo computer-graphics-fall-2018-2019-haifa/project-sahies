@@ -37,23 +37,23 @@ void Camera::SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const gl
 	auto y = glm::normalize(glm::cross(z, x));
 	
 
-	//glm::vec4 z4(z[0], z[1], z[2], 0);
-	//glm::vec4 x4(x[0], x[1], x[2], 0);
-	//glm::vec4 y4(y[0], y[1], y[2], 0);
-	//glm::vec4 t = glm::vec4(0.0, 0.0, 0.0, 1.0);
+	glm::vec4 z4(z[0], z[1], z[2], 0);
+	glm::vec4 x4(x[0], x[1], x[2], 0);
+	glm::vec4 y4(y[0], y[1], y[2], 0);
+	glm::vec4 t = glm::vec4(0.0, 0.0, 0.0, 1.0);
 
-	//glm::mat4 c = glm::mat4(x4, y4, z4, t);
+	glm::mat4 c = glm::mat4(x4, y4, z4, t);
 
 
-	//glm::mat4 translate_eye = Utils::GetMatrix("translate", -1*(eye.x), -1*(eye.y), -1*( eye.z));
-	//viewTransformation = c * glm::transpose(translate_eye);
-	glm::mat4 translate_eye = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z));
-	glm::mat4 c = {
-		x.x, x.y, x.z, 0,
-		y.x, y.y, y.z, 0,
-		z.x, z.y, z.z, 0,
-		-1*eye.x, -1*eye.y, -1*eye.z, 1
-	};
+	glm::mat4 translate_eye = Utils::GetMatrix("translate", -1*(eye.x), -1*(eye.y), -1*( eye.z));
+	viewTransformation = c * glm::transpose(translate_eye);
+	//glm::mat4 translate_eye = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z));
+	//glm::mat4 c = {
+	//	x.x, x.y, x.z, 0,
+	//	y.x, y.y, y.z, 0,
+	//	z.x, z.y, z.z, 0,
+	//	-1*eye.x, -1*eye.y, -1*eye.z, 1
+	//};
 	viewTransformation = translate_eye * glm::inverse(c);
 
 
@@ -67,9 +67,9 @@ void Camera::SetCamTransformation()
 	std::string rt = "rotate";
 	std::string tr = "translate";
 
-	this->eye = Utils::GetMatrix("translate", this->GetCordinates(tr)) * glm::vec4(eye[0], eye[1], eye[2], 1);
-	this->up = Utils::GetMatrix("rotate", this->GetCordinates(rt)) * glm::vec4(up[0], up[1], up[2], 1);
-	this->at = Utils::GetMatrix("translate", this->GetCordinates(tr)) * glm::vec4(up[0], up[1], up[2], 1);
+	//this->eye = Utils::GetMatrix("translate", this->GetCordinates(tr)) * glm::vec4(eye[0], eye[1], eye[2], 1);
+	//this->up = Utils::GetMatrix("rotate", this->GetCordinates(rt)) * glm::vec4(up[0], up[1], up[2], 1);
+	//this->at = Utils::GetMatrix("translate", this->GetCordinates(tr)) * glm::vec4(up[0], up[1], up[2], 1);
 	
 	SetCameraLookAt(eye, at, up);
 }
@@ -128,7 +128,14 @@ void Camera::SetPerspectiveProjection(
 
 void Camera::SetZoom(const float zoom)
 {
+	
+}
 
+
+void Camera::SetFocus(const float focus, MeshModel& model)
+{
+	std::string name = "transalte";
+	SetCameraLookAt(eye, focus * model.GetCordinates(name), up);
 }
 
 const glm::mat4x4 Camera::GetViewTransformation() 
@@ -145,6 +152,6 @@ const glm::mat4 Camera::GetProjection() const
 
 
 void Camera::SetEyePlace() {
-	glm::mat4 mat = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z)) *  Utils::GetMatrix("rotate", eye);
+	glm::mat4 mat = Utils::GetMatrix("translate", -1 * (eye.x), -1 * (eye.y), -1 * (eye.z)) *  Utils::GetMatrix("rotate", at);
 	this->vertices = Renderer::VerticesXmat(vertices,mat);
 }

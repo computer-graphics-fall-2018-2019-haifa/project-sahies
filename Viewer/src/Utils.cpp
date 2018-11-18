@@ -178,6 +178,21 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 }
 
 
+ glm::vec3 Utils::FaceToVertexIndex(Face& face) {
+	 int a = face.GetVertexIndex(0) - 1;
+	 int b = face.GetVertexIndex(1) - 1;
+	 int c = face.GetVertexIndex(2) - 1;
+	 return glm::vec3(a, b, c);
+ }
+
+ glm::vec3 Utils::FaceToNormalIndex(Face& face) {
+	 int a = face.GetNormalIndex(0) - 1;
+	 int b = face.GetNormalIndex(1) - 1;
+	 int c = face.GetNormalIndex(2) - 1;
+	 return glm::vec3(a, b, c);
+ }
+
+
 MeshModel Utils::LoadMeshModel(const std::string& filePath)
 {
 	std::vector<Face> faces;

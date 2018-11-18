@@ -14,13 +14,14 @@
 #include <nfd.h>
 #include <random>
 
+
 bool showDemoWindow = false;
 bool ScaleWindow = false;
 bool toDrawNormals = 0;
 int mul = 1;
 
 
-glm::vec4 clearColor = glm::vec4(0.8f, 0.8f, 0.8f, 1.00f);
+glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.00f);
 
 const glm::vec4& GetClearColor()
 {
@@ -35,7 +36,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		ImGui::ShowDemoWindow(&showDemoWindow);
 	}
 
-	
+	ImVec2 my_mouse_buttons = io.MousePos;             // set the mouse position
+	io.MouseDown[0] = my_mouse_buttons[0];  // set the mouse button states
+	io.MouseDown[1] = my_mouse_buttons[1];
+
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 

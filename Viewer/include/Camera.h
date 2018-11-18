@@ -51,5 +51,8 @@ public:
 	void SetWorldTransformation();
 	const glm::mat4 GetViewTransformation();
 	const glm::mat4 GetProjection() const;
+	void Camera::SetFocus(const float focus, MeshModel& model);
+	
+
 	// Add more methods/functionality as needed...
 };
