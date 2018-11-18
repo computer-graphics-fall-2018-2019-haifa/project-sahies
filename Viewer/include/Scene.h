@@ -23,7 +23,7 @@ private:
 	float normal_size;
 
 public:
-	int activeModelIndex; // Need to be private. dont know why it dosent work
+	int activeModelIndex; 
 	int activeCameraIndex;
 	Scene();
 
