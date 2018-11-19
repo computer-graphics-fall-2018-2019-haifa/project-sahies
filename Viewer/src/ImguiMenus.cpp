@@ -60,14 +60,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		cam_obj->SetModelName("Camera" + std::to_string(CameraCounter));
 		scene.AddModel(cam_obj);
 		CameraCounter++;
-		scene.AddCamera(Camera(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
+		scene.AddCamera(std::make_shared<Camera>(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 		scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 		change = 1;
 	}
 
 
-	std::vector<Camera> cameras = scene.GetCameras();
-	static std::shared_ptr<Camera> camera = std::make_shared<Camera>(scene.GetCamera(scene.GetActiveCameraIndex()));
+	std::vector<std::shared_ptr<Camera>>cameras = scene.GetCameras();
+	static std::shared_ptr<Camera> camera = scene.GetCamera(scene.GetActiveCameraIndex());
 	
 
 	std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
@@ -75,7 +75,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 
 	ImGui::Begin("Or Berger AND Mor Vaknin PlayGround");
-	//ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
 	ImGui::Text("Background Color:");
 	ImGui::ColorEdit3("Clear Color", (float*)&clearColor); // Edit 3 floats representing a color
 
@@ -85,12 +84,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	if (ImGui::CollapsingHeader("Cameras"))
 	{
 		//add camera btn
-		if (ImGui::Button("Add Camera") || scene.GetCameraCount() == 0) {
+		if (ImGui::Button("Add Camera")) {
 			std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
 			cam_obj->SetModelName("Camera " + std::to_string(CameraCounter));
 			CameraCounter++;
 			scene.AddModel(cam_obj);
-			scene.AddCamera(Camera(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
+			scene.AddCamera(std::make_shared<Camera>(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 			change = 1;
 		}
@@ -105,7 +104,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
 			}
 			ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
-			camera = std::make_shared<Camera>(scene.GetCamera(scene.GetActiveCameraIndex()));
+			camera = scene.GetCamera(scene.GetActiveCameraIndex());
+
 			// Need to change scene veiwport here
 			delete[] c_cameras_names;
 		}
@@ -116,11 +116,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		static float _near = 1.0f, _far = 1.0f, _ratio = 1.0f;
 		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
 			camera->zNear = _near;
+			change = 1;
 		}
-		if (ImGui::SliderFloat("Far", &_far, 0.0f, 250.0f))
+		if (ImGui::SliderFloat("Far", &_far, 0.0f, 250.0f)) {
 			camera->zFar = _far;
-		if(ImGui::SliderFloat("Ratio", &_ratio, 0.0f, 250.0f))
+			change = 1;
+		}
+		if (ImGui::SliderFloat("Ratio", &_ratio, 0.0f, 250.0f)) {
 			camera->aspect = _ratio;
+			change = 1;
+		}
 
 		static float _eye[3] = {
 			camera->eye.x,
@@ -455,8 +460,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 
 	for (int i = 0; i < scene.cameras.size(); i++) {
-		if (scene.cameras[i].GetModelName() == camera->GetModelName()) {
-			scene.cameras[i] = *camera;
+		if (scene.cameras[i]->GetModelName() == camera->GetModelName()) {
+			scene.cameras[i] = camera;
 			break;
 		}
 	}

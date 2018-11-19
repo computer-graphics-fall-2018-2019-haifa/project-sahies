@@ -156,16 +156,16 @@ void Renderer::Render(const Scene& scene, int& change )
 
 	if (scene.GetModelCount())
 	{
-		Camera active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
+		std::shared_ptr<Camera> active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
 		if (change) {
 			glm::mat4 cameraTransformations = UpdateChangesCamera(active_camera);
 			for (auto model : scene.GetModels()) {
 				glm::mat4 modelTransformations = UpdateChangesModel(model, active_camera);
-				if (active_camera.GetModelName() == model->GetModelName()) {
+				if (active_camera->GetModelName() == model->GetModelName()) {
 					UpdateVertecisByTransformations(active_camera, cameraTransformations);
 					continue;
 				} else {
-					UpdateVertecisByTransformations(*model, modelTransformations);
+					UpdateVertecisByTransformations(model, modelTransformations);
 					if (scene.toDrawBox) {
 						model->CreateCube(std::vector<glm::vec3>(model->GetVertices()), viewportWidth / 2, viewportHeight / 2, modelTransformations);
 						DrawCube(model);
@@ -188,19 +188,26 @@ void Renderer::Render(const Scene& scene, int& change )
 
 
 
-void Renderer::UpdateVertecisByTransformations(MeshModel& model, glm::mat4& transformation)
+void Renderer::UpdateVertecisByTransformations(std::shared_ptr<MeshModel>& model, glm::mat4& transformation)
 {
 	std::vector<glm::vec3> new_vec_n, new_vec;
-	new_vec_n = VerticesXmat(model.GetNormals(), transformation);
-	new_vec = VerticesXmat(model.GetVertices(), transformation);
-	model.SetNewVertices(new_vec, new_vec_n);
+	new_vec_n = VerticesXmat(model->GetNormals(), transformation);
+	new_vec = VerticesXmat(model->GetVertices(), transformation);
+	model->SetNewVertices(new_vec, new_vec_n);
+}
+
+void Renderer::UpdateVertecisByTransformations(std::shared_ptr<Camera>& cam, glm::mat4& transformation) {
+	std::vector<glm::vec3> new_vec_n, new_vec;
+	new_vec_n = VerticesXmat(cam->GetNormals(), transformation);
+	new_vec = VerticesXmat(cam->GetVertices(), transformation);
+	cam->SetNewVertices(new_vec, new_vec_n);
 }
 
 
-void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& models, Camera& active_camera, bool tdn, std::string genre, float ns, bool db)
+void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& models, std::shared_ptr<Camera>& active_camera, bool tdn, std::string genre, float ns, bool db)
 {
 	for (auto model : models) {
-		if (active_camera.GetModelName() == model->GetModelName())
+		if (active_camera->GetModelName() == model->GetModelName())
 			continue;
 		for (auto face : model->GetFaces()) {
 			DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), model->GetColor());
@@ -214,22 +221,22 @@ void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& m
 	}
 }
 
-glm::mat4 Renderer::UpdateChangesCamera(Camera& active_camera)
+glm::mat4 Renderer::UpdateChangesCamera(std::shared_ptr<Camera>& active_camera)
 {
-	active_camera.SetEyePlace();
-	active_camera.SetWorldTransformation();
-	active_camera.SetObjectTransformation();
-	return /*active_camera.GetProjection() **/  glm::inverse(active_camera.GetViewTransformation()) * active_camera.GetWorldTransformation() * active_camera.GetObjectTransformation();
+	active_camera->SetEyePlace();
+	active_camera->SetWorldTransformation();
+	active_camera->SetObjectTransformation();
+	return active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()) * active_camera->GetWorldTransformation() * active_camera->GetObjectTransformation();
 
 }
 
 
-glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, Camera& active_camera)
+glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, std::shared_ptr<Camera>& active_camera)
 {
 	model->SetWorldTransformation();
 	model->SetObjectTransformation();
 
-	return/* active_camera.GetProjection()**/ glm::inverse(active_camera.GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
+	return active_camera->GetProjection()* glm::inverse(active_camera->GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation();
 }
 
 

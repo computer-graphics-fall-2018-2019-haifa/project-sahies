@@ -25,7 +25,27 @@ Camera::Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, M
 	this->fovy = 2.5;
 	this->aspect = 1.5;
 	this->height = 1;
+	this->SetOrthographicProjection();
+}
+
+Camera::Camera(const Camera & other):MeshModel(other)
+{
+	this->eye = other.eye;
+	this->at = other.at;
+	this->up = other.up;
+	SetCameraLookAt(eye, at, up);
+	this->projectionType = other.projectionType;
+	this->left = other.left;
+	this->right = other.right;
+	this->bottom = other.bottom;
+	this->top = other.top;
+	this->zNear = other.zNear;
+	this->zFar = other.zFar;
+	this->fovy = other.fovy;
+	this->aspect = other.aspect;
+	this->height = other.height;
 	SetOrthographicProjection(2.5, 1, 10, 150);
+	
 }
 
 Camera::~Camera()
@@ -109,7 +129,7 @@ void Camera::SetPerspectiveProjection(
 
 	const float pi = 3.14159265;
 	// shear * scale to make 45 angle * divide by z
-	float height = (_far - _near) * glm::tan((fovy * pi)/ 180.0);
+	float height = 2* _near * glm::tan(0.5*((fovy * pi)/ 180.0));
 	float width = aspectRatio * height;
 	float t = 0.5 * height;
 	float b = -0.5 * height;

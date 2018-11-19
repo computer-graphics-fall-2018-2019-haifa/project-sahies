@@ -29,11 +29,11 @@ MeshModel::MeshModel(const MeshModel& model)
 	this->vertices = model.vertices;
 	this->faces = model.faces;
 	this->normals = model.normals;
-	this->worldTransform = glm::mat4(1);
-	this->matTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
-	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
+	this->worldTransform = model.worldTransform;
+	this->matTransformations = model.matTransformations;
+	this->cordinatesTransformations = model.cordinatesTransformations;
 	this->modelName = model.modelName;
-	this->matWorldTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
+	this->matWorldTransformations = model.matTransformations;
 	SetColor(colors[rand() % 6]);
 }
 

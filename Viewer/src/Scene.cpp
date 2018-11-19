@@ -3,10 +3,7 @@
 #include <string>
 #include "Camera.h"
 
-Scene::Scene() :
-	activeCameraIndex(0),
-	activeModelIndex(0)
-{}
+Scene::Scene():activeCameraIndex(0),activeModelIndex(0){}
 
 void Scene::AddModel(const std::shared_ptr<MeshModel>& model)
 {
@@ -33,22 +30,19 @@ const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const
 	return models;
 }
 
-const std::vector<std::shared_ptr<Camera>> Scene::GetCamerasPtr() const
-{
-	std::vector<std::shared_ptr<Camera>> vec;
-	for (auto cam : cameras) {
-		vec.push_back(std::make_shared<Camera>(cam));
-	}
-	return vec;
-}
-
-
-const std::vector<Camera> Scene::GetCameras() const
+const std::vector<std::shared_ptr<Camera>> Scene::GetCameras() const
 {
 	return cameras;
 }
 
-void Scene::AddCamera(const Camera& camera)
+/*
+const std::vector<Camera> Scene::GetCameras() const
+{
+	return cameras;
+}
+*/
+
+void Scene::AddCamera(const std::shared_ptr<Camera> camera)
 {
 	cameras.push_back(camera);
 }
@@ -60,7 +54,6 @@ const int Scene::GetCameraCount() const
 
 void Scene::SetActiveCameraIndex(int index)
 {
-	// implementation suggestion...
 	if (index >= 0 && index < cameras.size())
 	{
 		activeCameraIndex = index;
@@ -72,9 +65,9 @@ const int Scene::GetActiveCameraIndex() const
 	return activeCameraIndex;
 }
 
-const Camera Scene::GetCamera(int index) const
+const std::shared_ptr<Camera> Scene::GetCamera(int index) const
 {	
-	if (cameras.size() > index)
+	if (index >= 0 && index < cameras.size())
 		return cameras[index];
 }
 
@@ -91,7 +84,7 @@ std::vector<std::string>Scene::GetCamerasNames()
 {
 	std::vector<std::string> names;
 	for (int i = 0; i < GetCameraCount(); i++)
-		names.push_back(cameras[i].GetModelName());
+		names.push_back(cameras[i]->GetModelName());
 	return names;
 }
 
@@ -99,14 +92,13 @@ std::vector<std::string>Scene::GetCamerasNames()
 
 void Scene::SetDrawNormals(bool draw, std::string genre, float normal_size)
 {
-	this->toDrawNormals = draw;
-	this->draw_genre = genre;
+	toDrawNormals = draw;
+	draw_genre = genre;
 	this->normal_size = normal_size;
 }
 
 void Scene::SetActiveModelIndex(int index)
 {
-	// implementation suggestion...
 	if (index >= 0 && index < models.size())
 	{
 		activeModelIndex = index;
