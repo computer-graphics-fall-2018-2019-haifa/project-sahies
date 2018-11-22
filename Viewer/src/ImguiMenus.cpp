@@ -103,8 +103,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			{
 				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
 			}
-			ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size());
-			camera = scene.GetCamera(scene.GetActiveCameraIndex());
+			if (ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size())) {
+				;
+				camera = scene.GetCamera(scene.GetActiveCameraIndex());
+				change = 1;
+			}
 
 			// Need to change scene veiwport here
 			delete[] c_cameras_names;
