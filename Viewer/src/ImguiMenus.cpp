@@ -16,7 +16,7 @@
 
 bool showDemoWindow = false;
 bool ScaleWindow = false;
-
+static int c_idx = 0;
 
 
 glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.00f);
@@ -67,7 +67,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 
 	std::vector<std::shared_ptr<Camera>>cameras = scene.GetCameras();
-	static std::shared_ptr<Camera> camera = scene.GetCamera(scene.GetActiveCameraIndex());
+	std::shared_ptr<Camera> camera = cameras[scene.GetActiveCameraIndex()];
 	
 
 	std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
@@ -86,12 +86,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		//add camera btn
 		if (ImGui::Button("Add Camera")) {
 			std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
-			cam_obj->SetModelName("Camera " + std::to_string(CameraCounter));
+			cam_obj->SetModelName("Camera" + std::to_string(CameraCounter));
 			CameraCounter++;
 			scene.AddModel(cam_obj);
 			scene.AddCamera(std::make_shared<Camera>(glm::vec3(2, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 			change = 1;
+			c_idx++;
 		}
 
 		//make a list of the cameras names
@@ -99,15 +100,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		if (cameras_names.size() > 0) {
 
 			char** c_cameras_names = new char*[cameras_names.size()];
-			for (int i = 0; i < cameras_names.size(); ++i)
-			{
+			for (int i = 0; i < cameras_names.size(); i++)
 				c_cameras_names[i] = (char*)(cameras_names[i].c_str());
-			}
-			if (ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_cameras_names, cameras_names.size())) {
-				;
-				camera = scene.GetCamera(scene.GetActiveCameraIndex());
-				change = 1;
-			}
+
+			ImGui::Combo("Active Camera", &c_idx, c_cameras_names, cameras_names.size());
+			scene.SetActiveCameraIndex(c_idx);
+			camera = scene.GetCamera(scene.GetActiveCameraIndex());
+
 
 			// Need to change scene veiwport here
 			delete[] c_cameras_names;
@@ -181,8 +180,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		};
 
 		static int mode = 0;
-		if (ImGui::RadioButton("Perspective", mode == Perspective)) { mode = Perspective; } ImGui::SameLine();
-		if (ImGui::RadioButton("Orthographic", mode == Orthographic)) { mode = Orthographic; }
+		if (ImGui::RadioButton("Perspective", mode == Perspective)) {
+			mode = Perspective; 
+			change = 1;
+		} ImGui::SameLine();
+		if (ImGui::RadioButton("Orthographic", mode == Orthographic)) {
+			mode = Orthographic; 
+			change = 1;
+		}
 
 
 
@@ -461,16 +466,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		}
 	}
 
-
-	for (int i = 0; i < scene.cameras.size(); i++) {
-		if (scene.cameras[i]->GetModelName() == camera->GetModelName()) {
-			scene.cameras[i] = camera;
-			break;
-		}
-	}
-
-
-	//scene.cameras = cameras;
+	
 
 }
 

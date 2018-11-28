@@ -33,11 +33,11 @@ public:
 	float aspect;
 	float height;
 
-	Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, MeshModel& model);
+	Camera( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up, MeshModel& model);
 	Camera(const Camera& other);
 	~Camera();
 
-	void SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up);
+	void SetCameraLookAt( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up);
 
 	void SetOrthographicProjection(
 		const float height,

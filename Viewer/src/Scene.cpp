@@ -54,10 +54,7 @@ const int Scene::GetCameraCount() const
 
 void Scene::SetActiveCameraIndex(int index)
 {
-	if (index >= 0 && index < cameras.size())
-	{
-		activeCameraIndex = index;
-	}
+	activeCameraIndex = index;
 }
 
 const int Scene::GetActiveCameraIndex() const
@@ -65,10 +62,9 @@ const int Scene::GetActiveCameraIndex() const
 	return activeCameraIndex;
 }
 
-const std::shared_ptr<Camera> Scene::GetCamera(int index) const
+std::shared_ptr<Camera> Scene::GetCamera(int index) const
 {	
-	if (index >= 0 && index < cameras.size())
-		return cameras[index];
+	return cameras[index];
 }
 
 std::vector<std::string>Scene::GetModelsNames()

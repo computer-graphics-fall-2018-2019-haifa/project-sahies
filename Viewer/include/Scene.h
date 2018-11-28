@@ -46,7 +46,7 @@ public:
 	const int GetCameraCount() const;
 	//const std::vector<Camera> Scene::GetCameras() const;
 	const int GetActiveCameraIndex() const;
-	const std::shared_ptr<Camera> GetCamera(int index) const;
+	std::shared_ptr<Camera> GetCamera(int index) const;
 	std::vector<std::string>Scene::GetModelsNames();
 	std::vector<std::string>Scene::GetCamerasNames();
 	const int GetActiveModelIndex() const;
