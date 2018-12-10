@@ -212,9 +212,9 @@ void Renderer::Render(const Scene& scene, int& change)
 				
 				for (auto face : model->GetFaces()) {
 					DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), model->GetColor());
-					//FillTriangle(FromVecToTriangle(face,model->GetNewVertices()), model->GetNewNormalVertices(), light_normals,model->GetColor());
+					FillTriangle(FromVecToTriangle(face,model->GetNewVertices()), model->GetNewNormalVertices(), light_normals,model->GetColor());
 					if (scene.toDrawNormals)
-						DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), scene.draw_genre, scene.normal_size);
+						DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), model->GetVertices(), scene.draw_genre, scene.normal_size);
 				}
 			}
 		}
@@ -232,7 +232,7 @@ void Renderer::Render(const Scene& scene, int& change)
 void Renderer::UpdateVertecisByTransformations(std::shared_ptr<MeshModel>& model, glm::mat4& transformation)
 {
 	std::vector<glm::vec3> new_vec_n, new_vec;
-	new_vec_n = VerticesXmat(model->GetNormals(), transformation);
+	new_vec_n = VerticesXmat(model->GetNormals(), Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1));
 	new_vec = VerticesXmat(model->GetVertices(), transformation);
 	model->SetNewVertices(new_vec, new_vec_n);
 }
@@ -240,14 +240,14 @@ void Renderer::UpdateVertecisByTransformations(std::shared_ptr<MeshModel>& model
 void Renderer::UpdateVertecisByTransformations(std::shared_ptr<Light>& model, glm::mat4& transformation)
 {
 	std::vector<glm::vec3> new_vec_n, new_vec;
-	new_vec_n = VerticesXmat(model->GetNormals(), transformation);
+	new_vec_n = VerticesXmat(model->GetNormals(), Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1));
 	new_vec = VerticesXmat(model->GetVertices(), transformation);
 	model->SetNewVertices(new_vec, new_vec_n);
 }
 
 void Renderer::UpdateVertecisByTransformations(std::shared_ptr<Camera>& cam, glm::mat4& transformation) {
 	std::vector<glm::vec3> new_vec_n, new_vec;
-	new_vec_n = VerticesXmat(cam->GetNormals(), transformation);
+	new_vec_n = VerticesXmat(cam->GetNormals(), Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1));
 	new_vec = VerticesXmat(cam->GetVertices(), transformation);
 	cam->SetNewVertices(new_vec, new_vec_n);
 }
@@ -261,7 +261,7 @@ void Renderer::WithoutChangesRenderer(std::vector<std::shared_ptr<MeshModel>>& m
 		for (auto face : model->GetFaces()) {
 			DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), model->GetColor());
 			if (tdn)
-				DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), genre, ns);
+				DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), model->GetVertices(), genre,tdn);
 			if (db)
 				DrawCube(model);
 		}
@@ -362,6 +362,7 @@ void Renderer::FillTriangle(std::vector<glm::vec3>&  vertices, std::vector<glm::
 
 				glm::vec3 normal = lambda1 * normals[0] + lambda2 * normals[1] + lambda3 * normals[2];
 				glm::vec3 point = lambda1 * light_normals[0] + lambda2 * light_normals[1] + lambda3 * light_normals[2];
+				// if ortho 1/z else z
 
 				//glm::vec3 ilum_color(0);
 				//for (light : lights)
@@ -416,48 +417,48 @@ glm::vec3 Renderer::CenterShift(glm::vec3& point)
 
 }
 
-void Renderer::DrawNormals(Face& face, std::vector<glm::vec3>& normals, std::vector<glm::vec3>&  vertices, std::string draw_genre, float size_normal)
+void Renderer::DrawNormals(Face& face, std::vector<glm::vec3>& normals, std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>&  old_vertices, std::string draw_genre, float size_normal)
 {
-		int x_center = viewportWidth / 2;
-		int y_center = viewportHeight / 2;
-		glm::vec3 triangleIndex = Utils::FaceToVertexIndex(face);
-		glm::vec3 triangleNormalIndex = Utils::FaceToNormalIndex(face);
-		glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
+	int x_center = viewportWidth / 2;
+	int y_center = viewportHeight / 2;
+	glm::vec3 triangleIndex = Utils::FaceToVertexIndex(face);
+	glm::vec3 triangleNormalIndex = Utils::FaceToNormalIndex(face);
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
 
-		if (draw_genre == "face") {
+	if (draw_genre == "face") {
 
-			glm::vec3 start3o = (vertices[triangleIndex.x] + vertices[triangleIndex.y] + vertices[triangleIndex.z]) / glm::vec3(3);
-			glm::vec3 end_n3o = glm::normalize(glm::cross(vertices[triangleIndex.y] - vertices[triangleIndex.x], vertices[triangleIndex.z] - vertices[triangleIndex.x]));
-			glm::vec3 start3 = start3o;
-			glm::vec3 end_n3 = start3o + end_n3o * size_normal;
-			glm::vec4 start4 = glm::vec4(start3, 1);
-			glm::vec4 end_n4 = glm::vec4(end_n3, 1);
-			glm::vec3 start = Utils::Vertex4to3(start4);
-			glm::vec3 end_n = Utils::Vertex4to3(end_n4);
+		glm::vec3 start3o = (vertices[triangleIndex.x] + vertices[triangleIndex.y] + vertices[triangleIndex.z]) / glm::vec3(3);
+		glm::vec3 end_n3o = glm::normalize(glm::cross(old_vertices[triangleIndex.y] - old_vertices[triangleIndex.x], old_vertices[triangleIndex.z] - old_vertices[triangleIndex.x]));
+		glm::vec3 start3 = start3o;
+		glm::vec3 end_n3 = start3o + end_n3o * size_normal * 30.0f;
+		glm::vec4 start4 = glm::vec4(start3, 1);
+		glm::vec4 end_n4 = glm::vec4(end_n3, 1);
+		glm::vec3 start = Utils::Vertex4to3(start4);
+		glm::vec3 end_n = Utils::Vertex4to3(end_n4);
 
-			glm::vec4 finish = { start.x, start.y , start.x + end_n.x * size_normal, start.y + end_n.y * size_normal };
+		glm::vec4 finish = { start.x, start.y , end_n.x , end_n.y };
 
-			finish += glm::vec4(x_center, y_center, x_center, y_center);
+		finish += glm::vec4(x_center, y_center, x_center, y_center);
 
-			bresenham_line(finish.x, finish.y, finish.z, finish.w, glm::vec3(0, 1, 0));
+		bresenham_line(finish.x, finish.y, finish.z, finish.w, glm::vec3(0, 1, 0));
 
-		}
-		else {
-			glm::vec3 a_end = glm::vec3(vertices[triangleIndex.x].x + size_normal * normals[triangleNormalIndex.x].x, vertices[triangleIndex.x].y + size_normal * normals[triangleNormalIndex.x].y, 0);
-			glm::vec3 b_end = glm::vec3(vertices[triangleIndex.y].x + size_normal * normals[triangleNormalIndex.y].x, vertices[triangleIndex.y].y + size_normal * normals[triangleNormalIndex.y].y, 0);
-			glm::vec3 c_end = glm::vec3(vertices[triangleIndex.z].x + size_normal * normals[triangleNormalIndex.z].x, vertices[triangleIndex.z].y + size_normal * normals[triangleNormalIndex.z].y, 0);
+	}
+	else {
+		glm::vec3 a_end = glm::vec3(vertices[triangleIndex.x].x + size_normal * normals[triangleNormalIndex.x].x, vertices[triangleIndex.x].y + size_normal * normals[triangleNormalIndex.x].y, 0);
+		glm::vec3 b_end = glm::vec3(vertices[triangleIndex.y].x + size_normal * normals[triangleNormalIndex.y].x, vertices[triangleIndex.y].y + size_normal * normals[triangleNormalIndex.y].y, 0);
+		glm::vec3 c_end = glm::vec3(vertices[triangleIndex.z].x + size_normal * normals[triangleNormalIndex.z].x, vertices[triangleIndex.z].y + size_normal * normals[triangleNormalIndex.z].y, 0);
 
-			vertices[triangleIndex.x] += center_shift;
-			vertices[triangleIndex.y] += center_shift;
-			vertices[triangleIndex.z] += center_shift;
-			a_end += center_shift;
-			b_end += center_shift;
-			c_end += center_shift;
+		vertices[triangleIndex.x] += center_shift;
+		vertices[triangleIndex.y] += center_shift;
+		vertices[triangleIndex.z] += center_shift;
+		a_end += center_shift;
+		b_end += center_shift;
+		c_end += center_shift;
 
-			bresenham_line(vertices[triangleIndex.x].x, vertices[triangleIndex.x].y, a_end.x, a_end.y, glm::vec3(0, 1, 0));
-			bresenham_line(vertices[triangleIndex.y].x, vertices[triangleIndex.y].y, b_end.x, b_end.y, glm::vec3(0, 1, 0));
-			bresenham_line(vertices[triangleIndex.z].x, vertices[triangleIndex.z].y, c_end.x, c_end.y, glm::vec3(0, 1, 0));
-		}
+		bresenham_line(vertices[triangleIndex.x].x, vertices[triangleIndex.x].y, a_end.x, a_end.y, glm::vec3(0, 1, 0));
+		bresenham_line(vertices[triangleIndex.y].x, vertices[triangleIndex.y].y, b_end.x, b_end.y, glm::vec3(0, 1, 0));
+		bresenham_line(vertices[triangleIndex.z].x, vertices[triangleIndex.z].y, c_end.x, c_end.y, glm::vec3(0, 1, 0));
+	}
 }
 
 

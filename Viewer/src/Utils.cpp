@@ -200,31 +200,32 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 	 for (auto n_a : near_faces)
 		 n_a = 0;
 
-	for (Face face : faces)
-	{
-		glm::vec3 v = FaceToNormalIndex(face);
-		glm::vec3 u = vertices[v[0]] - vertices[v[1]];
-		glm::vec3 m = vertices[v[2]] - vertices[v[1]];
-		glm::vec3 face_normal = glm::normalize(-glm::cross(u,m));
+	 for (Face face : faces)
+	 {
+		 glm::vec3 v = FaceToNormalIndex(face);
+		 glm::vec3 u = vertices[v[0]] - vertices[v[1]];
+		 glm::vec3 m = vertices[v[2]] - vertices[v[1]];
+		 glm::vec3 face_normal = glm::normalize(-glm::cross(u, m));
 
-		normals[v[0]] += face_normal;
-		normals[v[1]] += face_normal;
-		normals[v[2]] += face_normal;
+		 normals[v[0]] += face_normal;
+		 normals[v[1]] += face_normal;
+		 normals[v[2]] += face_normal;
 
-		near_faces[v[0]] += 1;
-		near_faces[v[1]] += 1;
-		near_faces[v[2]] += 1;
-		
-	}
+		 near_faces[v[0]] += 1;
+		 near_faces[v[1]] += 1;
+		 near_faces[v[2]] += 1;
 
-	for (int i = 0; i < normals.size(); i++)
-	{
-		normals[i] /= near_faces[i];
-		normals[i] = glm::normalize(normals[i]);
-	}
+	 }
 
-	return normals;
+	 for (int i = 0; i < normals.size(); i++)
+	 {
+		 normals[i] /= near_faces[i];
+		 normals[i] = glm::normalize(normals[i]);
+	 }
+
+	 return normals;
  }
+
 
 
 
