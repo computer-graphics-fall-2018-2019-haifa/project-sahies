@@ -1,10 +1,7 @@
 #pragma once
 #define _USE_MATH_DEFINES
 
-#include "ImguiMenus.h"
-#include "MeshModel.h"
-#include "Renderer.h"
-#include "Utils.h"
+
 #include <cmath>
 #include <memory>
 #include <stdio.h>
@@ -13,6 +10,12 @@
 #include <stdlib.h>
 #include <nfd.h>
 #include <random>
+
+
+#include "ImguiMenus.h"
+#include "MeshModel.h"
+#include "Renderer.h"
+#include "Utils.h"
 
 bool showDemoWindow = false;
 bool ScaleWindow = false;
@@ -47,7 +50,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
-	std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\camera.obj";
+	std::string camera_path = "C:\\project-sahies\\project-sahies\\Data\\camera.obj";
 	static int CameraCounter = 0;
 	static int counter = 0;
 	static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, world_y = 0.0f, world_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0, left, right, bottom, top, zFar, aspect, normal_size;
