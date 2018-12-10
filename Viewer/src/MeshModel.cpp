@@ -147,11 +147,11 @@ void MeshModel::setMatrix(const glm::mat4 matrix, std::string name, std::string 
 void MeshModel::SetCordinates(const glm::vec3& cordinates, std::string& name)
 {
 	if (name == "scale") 
-		this->cordinatesTransformations[0] += cordinates;
-	if (name == "translate")
-		this->cordinatesTransformations[2] += cordinates;
+		this->cordinatesTransformations[0] = cordinates;
+	else if (name == "translate")
+		this->cordinatesTransformations[2] = cordinates;
 	else 
-		this->cordinatesTransformations[1] += cordinates;
+		this->cordinatesTransformations[1] = cordinates;
 }
 
 const std::vector<glm::vec3> MeshModel::GetVertices() const

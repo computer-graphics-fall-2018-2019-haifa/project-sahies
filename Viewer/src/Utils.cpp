@@ -116,7 +116,7 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 
  glm::mat4 Utils::GetMatrix(std::string transformation,float a, float b, float c) 
 {
-	 glm::mat4 mat, matX, matY, matZ;
+	glm::mat4 mat, matX, matY, matZ;
 	const float pi = 3.14159265;
 	float thetaX = pi / 180 * a;
 	float thetaY = pi / 180 * b;
