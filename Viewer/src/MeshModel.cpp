@@ -5,18 +5,26 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
+std::vector<glm::vec3> colors = { glm::vec3(0.87,0.58,0.98), glm::vec3(0.8 , 0.498039 , float(0.196078)), 
+glm::vec3(0,1,0),glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,0), glm::vec3(0,1,1) };
 
 MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, const std::string& modelName) :
 	modelName(modelName),
 	worldTransform(glm::mat4x4(1))
 {
+	translate = glm::vec3(0);
+	scale = glm::vec3(1);
+	rotate = glm::vec3(0);
 	this->matTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1)};
-	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
+	this->cordinatesTransformations = { glm::vec3(1),glm::vec3(0), glm::vec3(0) };
 	this-> matWorldTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
 	this->vertices = vertices;
 	this->faces = faces;
 	this->normals = normals;
+
+	SetColor(colors[rand() % 6]);
 }
 
 MeshModel::MeshModel(const MeshModel& model)
@@ -24,12 +32,18 @@ MeshModel::MeshModel(const MeshModel& model)
 	this->vertices = model.vertices;
 	this->faces = model.faces;
 	this->normals = model.normals;
-	this->worldTransform = glm::mat4(1);
-	this->matTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
-	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
+	this->worldTransform = model.worldTransform;
+	this->matTransformations = model.matTransformations;
+	this->cordinatesTransformations = model.cordinatesTransformations;
 	this->modelName = model.modelName;
-	this->matWorldTransformations = { glm::mat4(1),  glm::mat4(1), glm::mat4(1) };
+	this->matWorldTransformations = model.matTransformations;
+	SetColor(colors[rand() % 6]);
+	translate = glm::vec3(0);
+	scale = glm::vec3(1);
+	rotate = glm::vec3(0);
 }
+
+
 
 MeshModel::~MeshModel()
 {
@@ -41,6 +55,25 @@ void MeshModel::SetWorldTransformation()
 	this->worldTransform = matWorldTransformations[2] * matWorldTransformations[0] * matWorldTransformations[1];
 }
 
+ void MeshModel::InitCordinate()  {
+	this->cordinatesTransformations = { glm::vec3(0),glm::vec3(0), glm::vec3(0) };
+}
+
+ void MeshModel::SetNewVertices(std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& n_vertices)
+ {
+	 this->newVertices = vertices;
+	 this->newNormalVertices = n_vertices;
+ }
+
+ std::vector<glm::vec3> MeshModel::GetNewVertices()
+ {
+	 return newVertices;
+ }
+
+ std::vector<glm::vec3> MeshModel::GetNewNormalVertices()
+ {
+	 return this->newNormalVertices;
+ }
 
 void MeshModel::SetObjectTransformation()
 {
@@ -73,7 +106,9 @@ const glm::mat4x4 & MeshModel::GetObjectTransformation() const
 }
 
 
-void MeshModel::SetColor(const glm::vec4& color)
+
+
+void MeshModel::SetColor(const glm::vec3& color)
 {
 	this->color = color;
 }
@@ -85,9 +120,15 @@ void MeshModel::setVertices(const std::vector<glm::vec3> vertices) {
 
 }
 
-void MeshModel::SetTransform(const std::string & name)
+void MeshModel::SetTransform(const std::string & name, glm::vec3 cor)
 {
 	this->transformName = name;
+	if (name == "translate")
+		translate = cor;
+	else if (name == "scale")
+		scale = cor;
+	else
+		rotate = cor;
 }
 
 void MeshModel::SetModelName(const std::string & name)
@@ -119,7 +160,7 @@ void MeshModel::SetCordinates(const glm::vec3& cordinates, std::string& name)
 {
 	if (name == "scale") 
 		this->cordinatesTransformations[0] += cordinates;
-	if (name == "translate")
+	else if (name == "translate")
 		this->cordinatesTransformations[2] += cordinates;
 	else 
 		this->cordinatesTransformations[1] += cordinates;
@@ -130,7 +171,7 @@ const std::vector<glm::vec3> MeshModel::GetVertices() const
 	return vertices;
 }
 
-const glm::vec4& MeshModel::GetColor() const
+const glm::vec3& MeshModel::GetColor() const
 {
 	return color;
 }
@@ -161,31 +202,79 @@ const std::map<std::string, glm::vec3> MeshModel::GetCube() const
 	return cube;
 }
 
-void MeshModel::CreateCube()
+
+glm::vec2 MeshModel::ScaleSize(const std::vector<glm::vec3>& vertices, float h, float w)
 {
+
+	glm::vec3 max = findMax(vertices);
+	glm::vec3 min = findMin(vertices);
+
+	float right = max.x;
+	float left = min.x;
+	float bottom = min.y;
+	float top = max.y;
+	float front = min.z;
+	float back = max.z;
+
+	return glm::vec2((h/ (top - bottom)),(w / (right - left))) ;
+
+}
+
+void MeshModel::CreateCube(std::vector<glm::vec3>& vertices, float h, float w, glm::mat4& modelTransformations)
+{
+	glm::vec4 center_shift = glm::vec4(h, w, 0,0);
+
+	glm::vec3 max = findMax(vertices);
+	glm::vec3 min = findMin(vertices);
+
+	float right = max.x;
+	float left = min.x;
+	float bottom = min.y;
+	float top = max.y;
+	float front = min.z;
+	float back = max.z;
+	
+
+	cube["lbf"] = modelTransformations * glm::vec4(left, bottom, front, 1) + center_shift;
+	cube["rbf"] = modelTransformations * glm::vec4(right, bottom, front, 1) + center_shift;
+
+	cube["ltf"] = modelTransformations * glm::vec4(left, top, front, 1) + center_shift;
+	cube["rtf"] = modelTransformations * glm::vec4(right, top, front, 1) + center_shift;
+
+	cube["lbb"] = modelTransformations * glm::vec4(left, bottom, back, 1) + center_shift;
+	cube["rbb"] = modelTransformations * glm::vec4(right, bottom, back, 1) + center_shift;
+
+	cube["ltb"] = modelTransformations * glm::vec4(left, top, back, 1) + center_shift;
+	cube["rtb"] = modelTransformations * glm::vec4(right, top, back, 1) + center_shift;
+
+}
+
+glm::vec3 MeshModel::findMax(const std::vector<glm::vec3>& vertices)
+{
+	float max_x = vertices[0].x, max_z = vertices[0].z, max_y = vertices[0].y;
 	for (auto vertex : vertices)
 	{
-		back = (back >= vertex.z) ? back : vertex.z;
-		front = (front <= vertex.z) ? front : vertex.z;
-
-		right = (right >= vertex.x) ? right : vertex.x;
-		left = (left <= vertex.x) ? left : vertex.x;
-
-		top = (top >= vertex.y) ? top : vertex.y;
-		bottom = (top >= vertex.y) ? top : vertex.y;
+		if (vertex.x > max_x)
+			max_x = vertex.x;
+		if (vertex.y > max_y)
+			max_y = vertex.y;
+		if (vertex.z > max_z)
+			max_z = vertex.z;
 	}
+	return { max_x,max_y,max_z };
+}
 
-
-	cube["fbl"] = glm::vec3(left, bottom, front);
-	cube["fbr"] = glm::vec3(right, bottom, front);
-
-	cube["ftl"] = glm::vec3(left, top, front);
-	cube["ftr"] = glm::vec3(right, top, front);
-
-	cube["bbl"] = glm::vec3(left, bottom, back);
-	cube["bbr"] = glm::vec3(right, bottom, back);
-
-	cube["btl"] = glm::vec3(left, top, back);
-	cube["btr"] = glm::vec3(right, top, back);
-
+glm::vec3 MeshModel::findMin(const std::vector<glm::vec3>& vertices)
+{
+	float min_x = vertices[0].x, min_z = vertices[0].z, min_y = vertices[0].y;
+	for (auto vertex : vertices)
+	{
+		if (vertex.x < min_x)
+			min_x = vertex.x;
+		if (vertex.y < min_y)
+			min_y = vertex.y;
+		if (vertex.z < min_z)
+			min_z = vertex.z;
+	}
+	return { min_x,min_y,min_z };
 }

@@ -12,7 +12,16 @@ class Camera: public MeshModel
 private:
 	glm::mat4 viewTransformation;
 	glm::mat4 projectionTransformation;
-	float zoom;
+	
+
+
+public:
+	bool byTopBttm;
+	glm::vec3 eye;
+	glm::vec3 at;
+	glm::vec3 up;
+	glm::vec3 zoom;
+
 	float left;
 	float right;
 	float bottom;
@@ -21,16 +30,13 @@ private:
 	float zFar;
 	float fovy;
 	float aspect;
-	std::string projectionType;
-	glm::vec3 eye;
-	glm::vec3 at;
-    glm::vec3 up;
+	float height;
 
-public:
-	Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, MeshModel& model);
+	Camera( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up, MeshModel& model);
+	Camera(const Camera& other);
 	~Camera();
 
-	void SetCameraLookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up);
+	void SetCameraLookAt( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up);
 
 	void SetOrthographicProjection(
 		const float height,
@@ -46,10 +52,14 @@ public:
 
 	void SetZoom(const float zoom);
 
+	void Camera::SetEyePlace();
 	void SetCamTransformation();
 	void SetWorldTransformation();
 	const glm::mat4 GetViewTransformation();
 	const glm::mat4 GetProjection() const;
-	void SetEyePlace();
+	void Camera::SetFocus(MeshModel& model);
+	void Camera::SetPerspectiveProjection();
+	void Camera::SetOrthographicProjection();
+	void Camera::SetCameraLookAt();
 	// Add more methods/functionality as needed...
 };
