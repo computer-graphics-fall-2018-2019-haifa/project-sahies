@@ -20,7 +20,7 @@ Camera::Camera( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up, MeshModel& model
 	this->top = 1;
 	this->zNear = 1;
 	this->zFar = 10;
-	this->fovy = 45;
+	this->fovy = 26;
 	this->aspect = 1280.0f/720.0f;
 	this->height = 1;
 	this->byTopBttm = false;
@@ -75,9 +75,9 @@ void Camera::SetCameraLookAt( glm::vec3& e,  glm::vec3& a,  glm::vec3& u)
 
 	this->viewTransformation = c * identity * Utils::GetMatrix("scale", zoom);*/
 
-	glm::vec3 z = normalize(e - a);
-	glm::vec3 x = normalize(glm::cross(u, z));
-	glm::vec3 y = normalize(glm::cross(z, x));
+	glm::vec3 z = glm::normalize(e - a);
+	glm::vec3 x = glm::normalize(glm::cross(u, z));
+	glm::vec3 y = glm::normalize(glm::cross(z, x));
 
 	glm::mat4x4 c = glm::transpose(glm::mat4x4({
 		x[0], x[1], x[2], 0,

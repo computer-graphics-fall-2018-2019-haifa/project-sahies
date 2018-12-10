@@ -10,6 +10,11 @@ void Scene::AddModel(const std::shared_ptr<MeshModel>& model)
 	models.push_back(model);
 }
 
+void Scene::AddLight(const std::shared_ptr<Light>& light)
+{
+	lights.push_back(light);
+}
+
 void Scene::PopModel()
 {
 	models.pop_back();
@@ -126,5 +131,13 @@ void Scene::SetActiveModelIndex(std::string name)
 			SetActiveModelIndex(i);
 			break;
 		}
+	}
+}
+
+void Scene::SetActiveLightIndex(int index)
+{
+	if (index >= 0 && index < lights.size())
+	{
+		activeLightIndex = index;
 	}
 }

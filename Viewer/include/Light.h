@@ -2,16 +2,18 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include "MeshModel.h"
+#include <glm/gtc/type_ptr.hpp>
 
-
-class Light : public MeshModel {
+class Light: public MeshModel{
 private:
 
 
 public:
-	int k;
-	Light(MeshModel& model, int k);
-	Light(const Light& other);
+	float vault_diffuse;
+	float vault_ambient;
+	float vault_specular;
+	
+	Light(MeshModel& model);
 	~Light();
-
+	void Light::SetMaterialVault(glm::vec3 mat);
 };

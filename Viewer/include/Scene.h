@@ -7,6 +7,7 @@
 #include <memory>
 #include "MeshModel.h"
 #include "Camera.h"
+#include "Light.h"
 
 /*
  * Scene class.
@@ -20,6 +21,7 @@ private:
 
 public:
 	std::vector<std::shared_ptr<MeshModel>> models;
+	std::vector<std::shared_ptr<Light>> lights;
 	std::vector<std::shared_ptr<Camera>> cameras;
 	int activeCameraIndex;
 	int activeModelIndex;
@@ -27,6 +29,7 @@ public:
 	bool toDrawBox = false;
 	std::string draw_genre;
 	float normal_size;
+	int activeLightIndex = 0;
 
 	//c'tor
 	Scene();
@@ -34,6 +37,7 @@ public:
 	
 	void AddCamera(const std::shared_ptr<Camera> camera);
 	void AddModel(const std::shared_ptr<MeshModel>& model);
+	void AddLight(const std::shared_ptr<Light>& light);
 	void Scene::PopModel();
 	
 	
@@ -58,5 +62,6 @@ public:
 	void SetDrawNormals(bool draw, std::string genre, float normal_size);
 	void SetActiveModelIndex(int index);
 	void Scene::SetActiveModelIndex(std::string name);
+	void Scene::SetActiveLightIndex(int index);
 
 };

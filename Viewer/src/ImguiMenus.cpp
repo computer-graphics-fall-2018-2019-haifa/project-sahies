@@ -3,6 +3,7 @@
 
 #include "ImguiMenus.h"
 #include "MeshModel.h"
+#include "Light.h"
 #include "Renderer.h"
 #include "Utils.h"
 #include <cmath>
@@ -18,7 +19,8 @@ bool showDemoWindow = false;
 bool ScaleWindow = false;
 static int c_idx = 0;
 
-
+std::vector<glm::vec3> colors = { glm::vec3(0.87,0.58,0.98), glm::vec3(0.8 , 0.498039 , float(0.196078)),
+		glm::vec3(0,1,0),glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,0), glm::vec3(0,1,1) };
 glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.00f);
 
 const glm::vec4& GetClearColor()
@@ -48,6 +50,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
 	std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\camera.obj";
+	std::string light_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\light.obj";
 	static int CameraCounter = 0;
 	static int counter = 0;
 	static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, world_y = 0.0f, world_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0, left, right, bottom, top, zFar, aspect, normal_size;
@@ -59,7 +62,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		cam_obj->SetModelName("Camera " + std::to_string(CameraCounter));
 		scene.AddModel(cam_obj);
 		CameraCounter++;
-		scene.AddCamera(std::make_shared<Camera>(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
+		scene.AddCamera(std::make_shared<Camera>(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 		scene.SetActiveCameraIndex(scene.GetCameraCount() );
 		change = 1;
 	}
@@ -77,6 +80,36 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	ImGui::ColorEdit3("Clear Color", (float*)&clearColor); // Edit 3 floats representing a color
 
 
+	/*****************   Light Menu   *****************/
+	if (ImGui::CollapsingHeader("Light"))
+	{
+		
+		if (ImGui::Button("Add Light")) {
+			std::shared_ptr<MeshModel> light_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(light_path));
+			light_obj->SetColor(glm::vec3(1, 1, 0));
+			SubmitTransform(light_obj, renderer, 0.1, 0.1, 1, "scale", "object", change);
+			SubmitTransform(light_obj, renderer, -6, 3, 0, "translate", "object", change);
+			SubmitTransform(light_obj, renderer, 46, 0, 0, "rotate", "object", change);
+
+			scene.AddModel(light_obj);
+			scene.AddLight(std::make_shared<Light>(*light_obj));
+			scene.SetActiveLightIndex(scene.lights.size() - 1);
+			change = 1;
+		}
+
+		if (scene.lights.size() > 0)
+		{
+			static float ambient_vault = 0.0f, spec_vault = 0.0f, diffuse_vault = 0.0f;
+			if (ImGui::SliderFloat("Ambient Vault", &ambient_vault, 0.0f, 1.0f) ||
+				ImGui::SliderFloat("Specular Vault", &spec_vault, 0.0f, 1.0f) ||
+				ImGui::SliderFloat("Diffuse Vault", &diffuse_vault, 0.0f, 1.0f)) {
+				glm::vec3 m = glm::vec3(ambient_vault, ambient_vault, spec_vault);
+				std::shared_ptr<Light> active_light = scene.lights[scene.activeLightIndex];
+				active_light->SetMaterialVault(m);
+			}
+		}
+
+	}
 
 	/*****************   Camera Menu   *****************/
 	if (ImGui::CollapsingHeader("Cameras"))
@@ -87,7 +120,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			cam_obj->SetModelName("Camera " + std::to_string(CameraCounter));
 			CameraCounter++;
 			scene.AddModel(cam_obj);
-			scene.AddCamera(std::make_shared<Camera>(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
+			scene.AddCamera(std::make_shared<Camera>(glm::vec3(360), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
 			change = 1;
 		}
@@ -264,17 +297,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 		
 
-		if (ImGui::DragFloat("Rotate Camera Local X", &rt_l_x, 0.2f)) {
-			SubmitTransform(model, renderer, rt_l_x, 1, 1, "rotate", "object", change);
+		if (ImGui::DragFloat("Rotate Camera Local", &rt_l_x, 0.2f)) {
+			camera->up.x = rt_l_x;
 			change = 1;
-			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
+			camera->SetCameraLookAt();
 		}
 
-		if (ImGui::DragFloat("Rotate Camera Local Y", &rt_l_y, 0.2f)) {
-			SubmitTransform(model, renderer, 1, rt_l_y, 1, "rotate", "object", change);
-			change = 1;
-			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
-		}
+
+
 
 		//Zoom Slide Bar
 		static float z = 0.0f;
@@ -369,11 +399,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			delete[] c_models_names;
 		}
 
+		
+		static glm::vec4 mColor(colors[rand() % 6],0);
+		if (ImGui::ColorEdit3("Model Color", (float*)&mColor))
+			model->SetColor(mColor);
 
-	/*	ImGui::ColorEdit3("Model Color", (float*)&mcolor);
-		model.SetColor(mcolor);*/
-
-		static float scale_model = 1.0f; //>0
+		static float scale_model = 1.0f; 
 		if (ImGui::DragFloat("Scale model", &scale_model, 0.1f)) {
 			SubmitTransform(model, renderer, scale_model, scale_model, scale_model, "scale", "object", change);
 			scale_x = scale_model;
@@ -404,6 +435,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			if (zrotate >= 180 || zrotate <= -180) zrotate = 0;
 			SubmitTransform(model, renderer, xrotate, yrotate, zrotate, "rotate", "object", change);
 		}
+
+
+		ImGui::SliderFloat("Diffuse", &model->diffuse, 0.0f, 1.0f);
+
+		ImGui::SliderFloat("Specular", &model->specular, 0.0f, 1.0f);
+
+		ImGui::SliderFloat("Ambient", &model->ambient, 0.0f, 1.0f);
 
 
 		/*     Draw Box     */
@@ -448,19 +486,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 
 
-		/*if (toDrawNormals) {
-			
-
-			ImGui::RadioButton("face", &e, 0); ImGui::SameLine();
-			ImGui::RadioButton("vertex", &e, 1);
-			if (e)
-				draw_genre = "vertex";
-			else
-				draw_genre = "face";
-			scene.SetDrawNormals(toDrawNormals, draw_genre, normal_size);
-		}
-		*/
-
 
 	}
 
@@ -496,6 +521,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 						MeshModel addM = Utils::LoadMeshModel(outPath);
 						scene.AddModel(std::make_shared<MeshModel>(addM));
 						scene.SetActiveModelIndex(scene.GetModelCount() - 1);
+						(scene.GetModel(scene.GetActiveModelIndex()))->SetColor(colors[rand() % 6]);
 						free(outPath);
 						change = 1;
 					}

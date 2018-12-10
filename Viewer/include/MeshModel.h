@@ -29,7 +29,7 @@ protected:
 	std::vector<glm::mat4> matWorldTransformations;
 	std::vector<glm::vec3> vertices;
 	glm::vec3 color;
-	std::vector<glm::vec3> cordinatesTransformations;
+	
 
 
 public:
@@ -39,9 +39,14 @@ public:
 	glm::vec3 translate;
 	glm::vec3 rotate;
 	glm::vec3 scale;
+	std::vector<glm::vec3> cordinatesTransformations;
+	
+	float ambient;
+	float specular;
+	float diffuse;
 
-	glm::vec3 findMax(const std::vector<glm::vec3>& vertices);
-	glm::vec3 findMin(const std::vector<glm::vec3>& vertices);
+	static glm::vec3 findMax(const std::vector<glm::vec3>& vertices);
+	static glm::vec3 findMin(const std::vector<glm::vec3>& vertices);
 
 	glm::vec2 MeshModel::ScaleSize(const std::vector<glm::vec3>& vertices, float h, float w);
 	const glm::vec3& GetColor() const;
@@ -58,9 +63,9 @@ public:
 	void SetObjectTransformation();
 
 	const std::string& GetModelName();
-	const std::vector<glm::vec3> MeshModel::GetVertices() const;
-	const std::vector<Face> MeshModel::GetFaces() const;
-	const std::vector<glm::vec3> GetNormals() const;
+	 std::vector<glm::vec3> MeshModel::GetVertices() const;
+	std::vector<Face> MeshModel::GetFaces() const;
+	 std::vector<glm::vec3> GetNormals() const;
 	void MeshModel::CreateCube(std::vector<glm::vec3>& vertices,float h, float w, glm::mat4& modelTransformations);
 	const glm::mat4x4& GetWorldTransformation() const;
 	const glm::mat4x4& GetObjectTransformation() const;

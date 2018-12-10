@@ -12,8 +12,10 @@
 
 
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
-// TODO ^
 #define INDEX(width,x,y,c) ((x)+(y)*(width))*3+(c)
+#define Z_INDEX(w,i,j) ((i)+(j)*(w))
+#define INFINITE 100000
+
 
 Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int viewportY) :
 	colorBuffer(nullptr),
@@ -21,6 +23,11 @@ Renderer::Renderer(int viewportWidth, int viewportHeight, int viewportX, int vie
 {
 	initOpenGLRendering();
 	SetViewport(viewportWidth, viewportHeight, viewportX, viewportY);
+	for (int i = 0; i < viewportWidth; ++i)
+	{
+		for (int j = 0; j < viewportHeight; ++j)
+			zBuffer[Z_INDEX(viewportWidth, i, j)] = INFINITE;
+	}
 }
 
 
@@ -56,11 +63,11 @@ void Renderer::bresenham_line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, gl
 	{
 		if (m)
 		{
-			putPixel(yIdx, xIdx, color);
+			putPixel(yIdx, xIdx, color,0);
 		}
 		else
 		{
-			putPixel(xIdx, yIdx, color);
+			putPixel(xIdx, yIdx, color,0);
 		}
 		error -= dy;
 		if (error < 0)
@@ -80,16 +87,21 @@ Renderer::~Renderer()
 	{
 		delete[] colorBuffer;
 	}
+	delete[] zBuffer;
 }
 
 
-void Renderer::putPixel(int i, int j, const glm::vec3& color)
+void Renderer::putPixel(int i, int j, const glm::vec3& color, float z)
 {
 	if (i < 0) return; if (i >= viewportWidth) return;
 	if (j < 0) return; if (j >= viewportHeight) return;
-	colorBuffer[INDEX(viewportWidth, i, j, 0)] = color.x;
-	colorBuffer[INDEX(viewportWidth, i, j, 1)] = color.y;
-	colorBuffer[INDEX(viewportWidth, i, j, 2)] = color.z;
+	if (z < zBuffer[Z_INDEX(viewportWidth, i, j)])
+		{
+		colorBuffer[INDEX(viewportWidth, i, j, 0)] = color.x;
+		colorBuffer[INDEX(viewportWidth, i, j, 1)] = color.y;
+		colorBuffer[INDEX(viewportWidth, i, j, 2)] = color.z;
+		zBuffer[Z_INDEX(viewportWidth, i, j)] = z;
+		}
 }
 
 
@@ -101,11 +113,12 @@ void Renderer::createBuffers(int viewportWidth, int viewportHeight)
 	}
 
 	colorBuffer = new float[3* viewportWidth * viewportHeight];
+	zBuffer = new float[viewportWidth * viewportHeight];
 	for (int x = 0; x < viewportWidth; x++)
 	{
 		for (int y = 0; y < viewportHeight; y++)
 		{
-			putPixel(x, y, glm::vec3(0.0f, 0.0f, 0.0f));
+			putPixel(x, y, glm::vec3(0.0f, 0.0f, 0.0f), 1.1);
 		}
 	}
 }
@@ -116,7 +129,9 @@ void Renderer::ClearColorBuffer(const glm::vec3& color)
 	{
 		for (int j = 0; j < viewportHeight; j++)
 		{
-			putPixel(i, j, color);
+			putPixel(i, j, color,1.1);
+			zBuffer[Z_INDEX(viewportWidth, i, j)] = INFINITE;
+
 		}
 	}
 }
@@ -159,30 +174,45 @@ void Renderer::Render(const Scene& scene, int& change)
 {
 	change = 1;
 
-
 	if (scene.GetModelCount())
 	{
 		std::shared_ptr<Camera> active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
 
+
+		std::vector<glm::vec3> light_normals(/*model->GetNewNormalVertices().size()*/200);
+		for (glm::vec3 l : light_normals)
+			l = glm::vec3(0);
+		if (scene.lights.size() > 0)
+		{
+			for (auto light : scene.lights)
+			{
+				glm::mat4 lightTransformations = UpdateChangesLight(light, active_camera);
+				UpdateVertecisByTransformations(light, lightTransformations);
+				light_normals = Utils::CalcNormals(light->GetNewNormalVertices(), light->GetFaces()); // +=
+			}
+		}
+
+
 		if (change) {
 			glm::mat4 cameraTransformations = UpdateChangesCamera(active_camera);
+			DrawAxes(1000, active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()));
 			for (auto model : scene.GetModels()) {
 				glm::mat4 modelTransformations = UpdateChangesModel(model, active_camera);
-				DrawAxes(1000, active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()));
 				if (active_camera->GetModelName() == model->GetModelName()) {
 					UpdateVertecisByTransformations(active_camera, cameraTransformations);
 					continue;
 				} else {
 					UpdateVertecisByTransformations(model, modelTransformations);
-					DrawAxes(1000, glm::inverse(active_camera->GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation());
+					DrawAxes(1000, active_camera->GetProjection() * glm::inverse(active_camera->GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation());
 					if (scene.toDrawBox) {
 						model->CreateCube(std::vector<glm::vec3>(model->GetVertices()), viewportWidth / 2, viewportHeight / 2, modelTransformations);
 						DrawCube(model);
 					}
 				}
-
+				
 				for (auto face : model->GetFaces()) {
 					DrawTriangle(FromVecToTriangle(face, model->GetNewVertices()), model->GetColor());
+					//FillTriangle(FromVecToTriangle(face,model->GetNewVertices()), model->GetNewNormalVertices(), light_normals,model->GetColor());
 					if (scene.toDrawNormals)
 						DrawNormals(face, model->GetNewNormalVertices(), model->GetNewVertices(), scene.draw_genre, scene.normal_size);
 				}
@@ -202,7 +232,15 @@ void Renderer::Render(const Scene& scene, int& change)
 void Renderer::UpdateVertecisByTransformations(std::shared_ptr<MeshModel>& model, glm::mat4& transformation)
 {
 	std::vector<glm::vec3> new_vec_n, new_vec;
-	new_vec_n = VerticesXmat(model->GetNormals(), Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 0));
+	new_vec_n = VerticesXmat(model->GetNormals(), transformation);
+	new_vec = VerticesXmat(model->GetVertices(), transformation);
+	model->SetNewVertices(new_vec, new_vec_n);
+}
+
+void Renderer::UpdateVertecisByTransformations(std::shared_ptr<Light>& model, glm::mat4& transformation)
+{
+	std::vector<glm::vec3> new_vec_n, new_vec;
+	new_vec_n = VerticesXmat(model->GetNormals(), transformation);
 	new_vec = VerticesXmat(model->GetVertices(), transformation);
 	model->SetNewVertices(new_vec, new_vec_n);
 }
@@ -235,7 +273,7 @@ glm::mat4 Renderer::UpdateChangesCamera(std::shared_ptr<Camera>& active_camera)
 	active_camera->SetWorldTransformation();
 	active_camera->SetObjectTransformation();
 	//active_camera->SetCameraLookAt();
-	return Utils::GetMatrix("scale", 50*1280.0f / 720.0f, 50*1280.0f / 720.0f, 0) * active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()) * active_camera->GetWorldTransformation() * active_camera->GetObjectTransformation();
+	return Utils::GetMatrix("scale", 50*1280.0f / 720.0f, 50*1280.0f / 720.0f, 1) * active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()) * active_camera->GetWorldTransformation() * active_camera->GetObjectTransformation();
 
 }
 
@@ -246,7 +284,16 @@ glm::mat4 Renderer::UpdateChangesModel(std::shared_ptr<MeshModel>& model, std::s
 	model->SetObjectTransformation();
 	//active_camera->SetCameraLookAt();
 	//glm::vec2 x = model->ScaleSize(model->GetVertices(), 1280.0f, 720.0f);
-	return Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 0) * active_camera->GetProjection() * glm::inverse(active_camera->GetViewTransformation()) * active_camera->GetWorldTransformation() * model->GetObjectTransformation();
+	return Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1) * active_camera->GetProjection() * glm::inverse(active_camera->GetViewTransformation()) * active_camera->GetWorldTransformation() * model->GetObjectTransformation();
+}
+
+glm::mat4 Renderer::UpdateChangesLight(std::shared_ptr<Light>& model, std::shared_ptr<Camera>& active_camera)
+{
+	model->SetWorldTransformation();
+	model->SetObjectTransformation();
+	//active_camera->SetCameraLookAt();
+	//glm::vec2 x = model->ScaleSize(model->GetVertices(), 1280.0f, 720.0f);
+	return Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1) * active_camera->GetProjection() * glm::inverse(active_camera->GetViewTransformation()) * active_camera->GetWorldTransformation() * model->GetObjectTransformation();
 }
 
 void Renderer::DrawAxes(float size, glm::mat4 matrix) {
@@ -288,11 +335,65 @@ void Renderer::DrawCube(std::shared_ptr<MeshModel>& model)
 }
 
 void Renderer::DrawTriangle(std::vector<glm::vec3> triangle, glm::vec3 color)
-	{
+{
 		bresenham_line(triangle[0].x, triangle[0].y, triangle[1].x, triangle[1].y, color);
 		bresenham_line(triangle[0].x, triangle[0].y, triangle[2].x, triangle[2].y, color);
 		bresenham_line(triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y, color);
+}
+
+void Renderer::FillTriangle(std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>&  normals, std::vector<glm::vec3>&  light_normals, glm::vec3 mColor)
+{
+	glm::vec3 min = MeshModel::findMin({vertices[0], vertices[1], vertices[2]});
+	glm::vec3 max = MeshModel::findMax({ vertices[0], vertices[1], vertices[2] });
+	for (int x = min.x; x <= max.x; x++)
+	{
+		for (int y = min.y; y <= max.y; y++)
+		{
+			glm::vec3 p = glm::vec3(x, y, 0);
+			glm::vec2 bcCords = BcCords2D(vertices, p);
+
+			if (bcCords[0] >= 0 && bcCords[1] >= 0 && (bcCords[0] + bcCords[1] <= 1))
+			{
+				float lambda1 = 1 - bcCords.x - bcCords.y;
+				float lambda2 = bcCords.x;
+				float lambda3 = bcCords.y;
+
+				float z_reciprocal = lambda1 * (1 / vertices[0].z) + lambda2 * (1 / vertices[1].z) + lambda3 * (1 / vertices[2].z);
+
+				glm::vec3 normal = lambda1 * normals[0] + lambda2 * normals[1] + lambda3 * normals[2];
+				glm::vec3 point = lambda1 * light_normals[0] + lambda2 * light_normals[1] + lambda3 * light_normals[2];
+
+				//glm::vec3 ilum_color(0);
+				//for (light : lights)
+				//	ilum_color += light->CalcIlum(point,normal); // CalcIlum r,g,b not exeed 1.0f
+
+			/*	glm::vec3 ilum_color(0);
+				ilum_color = (normal*point) * glm::vec3(0.5*0.3) + glm::vec3(0.5*0.3);*/
+				//putPixel(x, y, normal*point*glm::vec3(0.3)*glm::vec3(0.3), 1/z_reciprocal);
+				putPixel(x, y, mColor, 1 / z_reciprocal);
+			}
+		}
 	}
+}
+
+glm::vec2 Renderer::BcCords2D(const std::vector<glm::vec3>& vertices, const glm::vec3& p)
+{
+	glm::vec2 u = vertices[1] - vertices[0];
+	glm::vec2 v = vertices[2] - vertices[0];
+	glm::vec2 w = p - vertices[0];
+
+	float lambda1 = (w.y * v.x - v.y * w.x)/(u.y * v.x - u.x * v.y);
+	float lambda2 = (w.y - lambda1 * u.y)/(v.y);
+
+	return glm::vec2(lambda1, lambda2);
+}
+//
+//float Renderer::Edge(glm::vec3 v1, glm::vec3 v2, glm::vec3 p)
+//{
+//	glm::vec3 v = v2 - v1;
+//	glm::vec3 u = p - v1;
+//	return glm::cross(v,u).z;
+//}
 
 
 std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec)
@@ -325,7 +426,7 @@ void Renderer::DrawNormals(Face& face, std::vector<glm::vec3>& normals, std::vec
 
 		if (draw_genre == "face") {
 
-			glm::vec3 start3o = (vertices[triangleIndex.x]+ vertices[triangleIndex.y] + vertices[triangleIndex.z])/ glm::vec3(3);
+			glm::vec3 start3o = (vertices[triangleIndex.x] + vertices[triangleIndex.y] + vertices[triangleIndex.z]) / glm::vec3(3);
 			glm::vec3 end_n3o = glm::normalize(glm::cross(vertices[triangleIndex.y] - vertices[triangleIndex.x], vertices[triangleIndex.z] - vertices[triangleIndex.x]));
 			glm::vec3 start3 = start3o;
 			glm::vec3 end_n3 = start3o + end_n3o * size_normal;
@@ -338,7 +439,7 @@ void Renderer::DrawNormals(Face& face, std::vector<glm::vec3>& normals, std::vec
 
 			finish += glm::vec4(x_center, y_center, x_center, y_center);
 
-			bresenham_line(finish.x, finish.y, finish.z ,finish.w, glm::vec3(0, 1, 0));
+			bresenham_line(finish.x, finish.y, finish.z, finish.w, glm::vec3(0, 1, 0));
 
 		}
 		else {

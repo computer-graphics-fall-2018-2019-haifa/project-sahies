@@ -5,21 +5,22 @@
 #include "Utils.h"
 #include "MeshModel.h"
 #include "Renderer.h"
+#include <glm/gtc/type_ptr.hpp>
 
-
-Light::Light(MeshModel& model, int k) :
+Light::Light(MeshModel& model):
 	MeshModel(model)
 {
-	this->k = k;
-
 }
 
-Light::Light(const Light& other) :MeshModel(other)
-{
-	this->k = other.k;
 
-}
 
 Light::~Light()
 {
+}
+
+void Light::SetMaterialVault(glm::vec3 mat)
+{
+	vault_diffuse = mat[0];
+	vault_ambient = mat[1];
+	vault_specular = mat[2];
 }

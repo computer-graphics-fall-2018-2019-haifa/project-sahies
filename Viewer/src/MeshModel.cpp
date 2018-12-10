@@ -7,8 +7,9 @@
 #include <sstream>
 #include <iomanip>
 
-std::vector<glm::vec3> colors = { glm::vec3(0.87,0.58,0.98), glm::vec3(0.8 , 0.498039 , float(0.196078)), 
-glm::vec3(0,1,0),glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,0), glm::vec3(0,1,1) };
+
+std::vector<glm::vec3> colorss = { glm::vec3(0.87,0.58,0.98), glm::vec3(0.8 , 0.498039 , float(0.196078)),
+		glm::vec3(0,1,0),glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,0), glm::vec3(0,1,1) };
 
 MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, const std::string& modelName) :
 	modelName(modelName),
@@ -23,8 +24,13 @@ MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3
 	this->vertices = vertices;
 	this->faces = faces;
 	this->normals = normals;
+	SetColor(colorss[rand() % 6]);
 
-	SetColor(colors[rand() % 6]);
+	ambient = 0.2;
+	specular = 0.2;
+	diffuse = 0.2;
+
+	
 }
 
 MeshModel::MeshModel(const MeshModel& model)
@@ -37,7 +43,7 @@ MeshModel::MeshModel(const MeshModel& model)
 	this->cordinatesTransformations = model.cordinatesTransformations;
 	this->modelName = model.modelName;
 	this->matWorldTransformations = model.matTransformations;
-	SetColor(colors[rand() % 6]);
+	//SetColor(colors[rand() % 6]);
 	translate = glm::vec3(0);
 	scale = glm::vec3(1);
 	rotate = glm::vec3(0);
@@ -166,7 +172,7 @@ void MeshModel::SetCordinates(const glm::vec3& cordinates, std::string& name)
 		this->cordinatesTransformations[1] += cordinates;
 }
 
-const std::vector<glm::vec3> MeshModel::GetVertices() const
+ std::vector<glm::vec3> MeshModel::GetVertices() const
 {
 	return vertices;
 }
@@ -187,12 +193,12 @@ const std::string& MeshModel::GetModelName()
 }
 
 
-const std::vector<Face> MeshModel::GetFaces() const
+std::vector<Face> MeshModel::GetFaces() const
 {
 	return faces;
 }
 
-const std::vector<glm::vec3> MeshModel::GetNormals() const
+ std::vector<glm::vec3> MeshModel::GetNormals() const
 {
 	return normals;
 }
@@ -216,7 +222,7 @@ glm::vec2 MeshModel::ScaleSize(const std::vector<glm::vec3>& vertices, float h, 
 	float front = min.z;
 	float back = max.z;
 
-	return glm::vec2((h/ (top - bottom)),(w / (right - left))) ;
+	return glm::vec2((2000*(right - left)/w),(2000*(top - bottom)/h)) ;
 
 }
 

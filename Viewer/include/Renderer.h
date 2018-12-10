@@ -21,7 +21,7 @@ private:
 
 
 
-	void putPixel(int x, int y, const glm::vec3& color);
+	void Renderer::putPixel(int i, int j, const glm::vec3& color, float z);
 	void createBuffers(int viewportWidth, int viewportHeight);
 
 	GLuint glScreenTex;
@@ -54,5 +54,9 @@ public:
 	glm::vec3 Renderer::CenterShift(glm::vec3& point);
 	void Renderer::DrawAxes(float size, glm::mat4 matrix);
 	glm::vec3 Renderer::VertexXmat(glm::vec3 vertex, glm::mat4 matrix);
+	glm::vec2 Renderer::BcCords2D(const std::vector<glm::vec3>& vertices, const glm::vec3& p);
+	void Renderer::FillTriangle(std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>&  worldVertices, std::vector<glm::vec3>&  normals, glm::vec3 mColor);
+	glm::mat4 Renderer::UpdateChangesLight(std::shared_ptr<Light>& model, std::shared_ptr<Camera>& active_camera);
+	void Renderer::UpdateVertecisByTransformations(std::shared_ptr<Light>& model, glm::mat4& transformation);
 	// Add more methods/functionality as needed...
 };
