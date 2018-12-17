@@ -26,7 +26,7 @@ public:
 	static glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates);
 	static glm::vec3 Utils::FaceToVertexIndex(Face& face);
 	static glm::vec3 Utils::FaceToNormalIndex(Face& face);
-	static std::vector<glm::vec3> CalcNormals(std::vector<glm::vec3>& vertices, std::vector<Face>& faces);
+	static std::vector<glm::vec3> Utils::CalcNormals(std::vector<glm::vec3>& vertices, std::vector<Face>& faces);
 	// Add here more static utility functions...
 	// For example:
 	//	1. function that gets an angle, and returns a rotation matrix around a certian axis

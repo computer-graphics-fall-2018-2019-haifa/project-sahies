@@ -24,7 +24,7 @@ MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3
 	this->vertices = vertices;
 	this->faces = faces;
 	this->normals = normals;
-	SetColor(colorss[rand() % 6]);
+	SetColor(glm::vec3(1));
 
 	ambient = 0.2;
 	specular = 0.2;
@@ -43,7 +43,7 @@ MeshModel::MeshModel(const MeshModel& model)
 	this->cordinatesTransformations = model.cordinatesTransformations;
 	this->modelName = model.modelName;
 	this->matWorldTransformations = model.matTransformations;
-	//SetColor(colors[rand() % 6]);
+	SetColor(glm::vec3(1));
 	translate = glm::vec3(0);
 	scale = glm::vec3(1);
 	rotate = glm::vec3(0);
@@ -166,8 +166,9 @@ void MeshModel::SetCordinates(const glm::vec3& cordinates, std::string& name)
 {
 	if (name == "scale") 
 		this->cordinatesTransformations[0] += cordinates;
-	else if (name == "translate")
+	else if (name == "translate") 
 		this->cordinatesTransformations[2] += cordinates;
+	
 	else 
 		this->cordinatesTransformations[1] += cordinates;
 }

@@ -30,7 +30,7 @@ public:
 	std::string draw_genre;
 	float normal_size;
 	int activeLightIndex = 0;
-
+	std::string draw_style;
 	//c'tor
 	Scene();
 

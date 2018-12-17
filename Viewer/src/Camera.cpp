@@ -74,9 +74,12 @@ void Camera::SetCameraLookAt( glm::vec3& e,  glm::vec3& a,  glm::vec3& u)
 	identity[3] -= glm::vec4(e,1) - glm::vec4(0, 0, 0, 1);
 
 	this->viewTransformation = c * identity * Utils::GetMatrix("scale", zoom);*/
+	glm::vec3 _eye = (Utils::GetMatrix("translate", translate)  * glm::vec4(e[0], e[1], e[2], 1));
+	glm::vec3 _up = Utils::GetMatrix("rotate", rotate) * glm::vec4(u[0], u[1], u[2], 1);
+	glm::vec3 _at = (Utils::GetMatrix("translate", translate)  * Utils::GetMatrix("rotate", rotate)) * glm::vec4(a[0], a[1], a[2], 1);
 
-	glm::vec3 z = glm::normalize(e - a);
-	glm::vec3 x = glm::normalize(glm::cross(u, z));
+	glm::vec3 z = glm::normalize(_eye - _at);
+	glm::vec3 x = glm::normalize(glm::cross(_up, z));
 	glm::vec3 y = glm::normalize(glm::cross(z, x));
 
 	glm::mat4x4 c = glm::transpose(glm::mat4x4({
@@ -88,9 +91,9 @@ void Camera::SetCameraLookAt( glm::vec3& e,  glm::vec3& a,  glm::vec3& u)
 	));
 
 	glm::mat4x4 translationMatrix = glm::transpose(glm::mat4x4(
-		{ 1	,	0	,	0	,	-e[0],
-			0	,	1	,	0	,	-e[1],
-			0	,	0	,	1	,	-e[2],
+		{ 1	,	0	,	0	,	_eye[0],
+			0	,	1	,	0	,	_eye[1],
+			0	,	0	,	1	,	_eye[2],
 			0	,	0	,	0	,	1 }));
 	
 	viewTransformation =glm::transpose(c) * translationMatrix * Utils::GetMatrix("scale", zoom);

@@ -19,7 +19,7 @@ static void GlfwErrorCallback(int error, const char* description);
 GLFWwindow* SetupGlfwWindow(int w, int h, const char* window_name);
 ImGuiIO& SetupDearImgui(GLFWwindow* window);
 void StartFrame();
-void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io, int& change);
+void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io);
 void Cleanup(GLFWwindow* window);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
@@ -56,7 +56,6 @@ int main(int argc, char **argv)
 
 	// Register a mouse scroll-wheel callback
 	glfwSetScrollCallback(window, ScrollCallback);
-	int change = 0;
 	// This is the main game loop..
     while (!glfwWindowShouldClose(window))
     {
@@ -64,10 +63,10 @@ int main(int argc, char **argv)
 		StartFrame();
 
 		// Here we build the menus for the next frame. Feel free to pass more arguments to this function call
-		DrawImguiMenus(io, scene, renderer, change);
+		DrawImguiMenus(io, scene, renderer);
 
 		// Render the next frame
-		RenderFrame(window, scene, renderer, io, change);
+		RenderFrame(window, scene, renderer, io);
     }
 
 	// If we're here, then we're done. Cleanup memory.
@@ -124,7 +123,7 @@ void StartFrame()
 	ImGui::NewFrame();
 }
 
-void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io, int& change)
+void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& io)
 {
 	// Render the menus
 	ImGui::Render();
@@ -139,7 +138,7 @@ void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& 
 	renderer.ClearColorBuffer(GetClearColor());
 
 	// Render the scene
-	renderer.Render(scene, change);
+	renderer.Render(scene);
 
 	// Swap buffers
 	renderer.SwapBuffers();

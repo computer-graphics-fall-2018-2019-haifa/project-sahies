@@ -13,7 +13,7 @@
 class MeshModel
 {
 private:
-	std::vector<Face> faces;
+
 	std::vector<glm::vec3> normals;
 	std::string modelName;
 	std::string transformName;
@@ -29,7 +29,7 @@ protected:
 	std::vector<glm::mat4> matWorldTransformations;
 	std::vector<glm::vec3> vertices;
 	glm::vec3 color;
-	
+	std::vector<Face> faces;
 
 
 public:

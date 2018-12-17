@@ -192,39 +192,6 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 	 return glm::vec3(a, b, c);
  }
 
- std::vector<glm::vec3> Utils::CalcNormals(std::vector<glm::vec3>& vertices, std::vector<Face>& faces)
- {
-	 std::vector<glm::vec3> normals(vertices.size());
-	 std::vector<int> near_faces(vertices.size());
-
-	 for (auto n_a : near_faces)
-		 n_a = 0;
-
-	 for (Face face : faces)
-	 {
-		 glm::vec3 v = FaceToNormalIndex(face);
-		 glm::vec3 u = vertices[v[0]] - vertices[v[1]];
-		 glm::vec3 m = vertices[v[2]] - vertices[v[1]];
-		 glm::vec3 face_normal = glm::normalize(-glm::cross(u, m));
-
-		 normals[v[0]] += face_normal;
-		 normals[v[1]] += face_normal;
-		 normals[v[2]] += face_normal;
-
-		 near_faces[v[0]] += 1;
-		 near_faces[v[1]] += 1;
-		 near_faces[v[2]] += 1;
-
-	 }
-
-	 for (int i = 0; i < normals.size(); i++)
-	 {
-		 normals[i] /= near_faces[i];
-		 normals[i] = glm::normalize(normals[i]);
-	 }
-
-	 return normals;
- }
 
 
 
@@ -313,4 +280,40 @@ std::string Utils::GetFileName(const std::string& filePath)
 	}
 
 	return filePath.substr(index + 1, len - index);
+}
+
+
+
+std::vector<glm::vec3> Utils::CalcNormals(std::vector<glm::vec3>& vertices, std::vector<Face>& faces)
+{
+	std::vector<glm::vec3> normals(vertices.size());
+	std::vector<int> near_faces(vertices.size());
+
+	for (auto n_a : near_faces)
+		n_a = 0;
+
+	for (Face face : faces)
+	{
+		glm::vec3 v = Utils::FaceToVertexIndex(face);
+		glm::vec3 u = vertices[v.x] - vertices[v.y];
+		glm::vec3 m = vertices[v.z] - vertices[v.y];
+		glm::vec3 face_normal = glm::normalize(-glm::cross(u, m));
+
+		normals[v.x] += face_normal;
+		normals[v.y] += face_normal;
+		normals[v.z] += face_normal;
+
+		near_faces[v.x] += 1;
+		near_faces[v.y] += 1;
+		near_faces[v.z] += 1;
+
+	}
+
+	for (int i = 0; i < normals.size(); i++)
+	{
+		normals[i] /= near_faces[i];
+		normals[i] = glm::normalize(normals[i]);
+	}
+
+	return normals;
 }

@@ -38,7 +38,7 @@ void cleanCamerasFromModels(std::vector<std::string>& models_names) {
 }
 
 
-void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
+void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 {
 	// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 	if (showDemoWindow)
@@ -50,7 +50,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window
 
 	std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\camera.obj";
-	std::string light_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\light.obj";
+	std::string light_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\obj_examples\\demo.obj";
 	static int CameraCounter = 0;
 	static int counter = 0;
 	static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, world_y = 0.0f, world_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0, left, right, bottom, top, zFar, aspect, normal_size;
@@ -64,7 +64,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		CameraCounter++;
 		scene.AddCamera(std::make_shared<Camera>(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 		scene.SetActiveCameraIndex(scene.GetCameraCount() );
-		change = 1;
 	}
 
 
@@ -83,32 +82,62 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 	/*****************   Light Menu   *****************/
 	if (ImGui::CollapsingHeader("Light"))
 	{
-		
-		if (ImGui::Button("Add Light")) {
+		//static glm::vec4 lightColor(colors[rand() % 6], 0);
+		static glm::vec4 lightColor(1.0f, 1.0f, 1.0f,1.0f);
+		if (ImGui::Button("Add Light"))
+		{
 			std::shared_ptr<MeshModel> light_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(light_path));
-			light_obj->SetColor(glm::vec3(1, 1, 0));
-			SubmitTransform(light_obj, renderer, 0.1, 0.1, 1, "scale", "object", change);
-			SubmitTransform(light_obj, renderer, -6, 3, 0, "translate", "object", change);
-			SubmitTransform(light_obj, renderer, 46, 0, 0, "rotate", "object", change);
+			
+			light_obj->SetColor(lightColor);
+	
 
-			scene.AddModel(light_obj);
-			scene.AddLight(std::make_shared<Light>(*light_obj));
+			//scene.AddModel(light_obj);
+			std::shared_ptr<Light> lig = std::make_shared<Light>(light_obj);
+			SubmitTransform(lig, renderer, -6, 3, 0, "translate", "object");
+			scene.AddLight(lig);
 			scene.SetActiveLightIndex(scene.lights.size() - 1);
-			change = 1;
 		}
 
 		if (scene.lights.size() > 0)
 		{
-			static float ambient_vault = 0.0f, spec_vault = 0.0f, diffuse_vault = 0.0f;
+			std::shared_ptr<Light> active_light = scene.lights[scene.activeLightIndex];
+
+			static float ambient_vault = 0.5f, spec_vault = 0.5f, diffuse_vault = 0.5f;
 			if (ImGui::SliderFloat("Ambient Vault", &ambient_vault, 0.0f, 1.0f) ||
 				ImGui::SliderFloat("Specular Vault", &spec_vault, 0.0f, 1.0f) ||
 				ImGui::SliderFloat("Diffuse Vault", &diffuse_vault, 0.0f, 1.0f)) {
-				glm::vec3 m = glm::vec3(ambient_vault, ambient_vault, spec_vault);
-				std::shared_ptr<Light> active_light = scene.lights[scene.activeLightIndex];
+				glm::vec3 m = glm::vec3(diffuse_vault, ambient_vault, spec_vault);
 				active_light->SetMaterialVault(m);
 			}
-		}
 
+			if (ImGui::SliderFloat("Light Power", &active_light->light_power, 0.0f, 1.0f));
+		
+			if (ImGui::ColorEdit3("Light Color", (float*)&lightColor))
+				active_light->SetColor(lightColor);
+
+			enum Mode
+			{
+				Flat,
+				Gouraud,
+				Phong
+			};
+
+			static int style = 0;
+			if (ImGui::RadioButton("Flat", style == Flat)) {
+				style = Flat;
+				scene.draw_style = "flat";
+			} ImGui::SameLine();
+			if (ImGui::RadioButton("Gouraud", style == Gouraud)) {
+				style = Gouraud; 
+				scene.draw_style = "gouraud";
+			}
+			if (ImGui::RadioButton("Phong", style == Phong)) {
+				style = Phong;
+				scene.draw_style = "phong";
+			}
+
+
+		}
 	}
 
 	/*****************   Camera Menu   *****************/
@@ -120,9 +149,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			cam_obj->SetModelName("Camera " + std::to_string(CameraCounter));
 			CameraCounter++;
 			scene.AddModel(cam_obj);
-			scene.AddCamera(std::make_shared<Camera>(glm::vec3(360), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
+			scene.AddCamera(std::make_shared<Camera>(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0), *cam_obj));
 			scene.SetActiveCameraIndex(scene.GetCameraCount() - 1);
-			change = 1;
 		}
 
 		//make a list of the cameras names
@@ -138,10 +166,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			static int active_cam = scene.activeCameraIndex;
 			ImGui::Combo("Active Camera", &scene.activeCameraIndex, c_camera_names, camera_names.size());
 			camera = scene.GetCamera(scene.activeCameraIndex);
-			if (active_cam != scene.activeCameraIndex) {
-				change = 1;
+			if (active_cam != scene.activeCameraIndex) 
 				active_cam = scene.activeCameraIndex;
-			}
+			
 			
 			
 			
@@ -155,22 +182,18 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		static float top = 1.0f, bttm = 1.0f, left = 1.0f, right=1.0f;
 		if (ImGui::SliderFloat("Top", &top, 0.0f, 250.0f)) {
 			camera->top = top;
-			change = 1;
 			camera->byTopBttm = true;
 		}
 		if (ImGui::SliderFloat("Bottom", &bttm, 0.0f, 250.0f)) {
 			camera->bottom = bttm;
-			change = 1;
 			camera->byTopBttm = true;
 		}
 		if (ImGui::SliderFloat("Left", &left, 0.0f, 250.0f)) {
 			camera->left = left;
-			change = 1;
 			camera->byTopBttm = true;
 		}
 		if (ImGui::SliderFloat("Right", &right, 0.0f, 250.0f)) {
 			camera->right = right;
-			change = 1;
 			camera->byTopBttm = true;
 		}
 
@@ -179,17 +202,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		static float _near = 1.0f, _far = 1.0f, _ratio = 1.0f;
 		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
 			camera->zNear = _near;
-			change = 1;
 			camera->byTopBttm = false;
 		}
 		if (ImGui::SliderFloat("Far", &_far, 0.0f, 250.0f)) {
 			camera->zFar = _far;
-			change = 1;
 			camera->byTopBttm = false;
 		}
 		if (ImGui::SliderFloat("Ratio", &_ratio, 0.0f, 250.0f)) {
 			camera->aspect = _ratio;
-			change = 1;
 			camera->byTopBttm = false;
 		}
 
@@ -202,7 +222,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			camera->eye.x = _eye[0];
 			camera->eye.y = _eye[1];
 			camera->eye.z = _eye[2];
-			change = 1;
 			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
 		}
 
@@ -215,7 +234,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			camera->at.x = _at[0];
 			camera->at.y = _at[1];
 			camera->at.z = _at[2];
-			change = 1;
 			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
 
 		}
@@ -229,7 +247,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			camera->up.x = _up[0];
 			camera->up.y = _up[1];
 			camera->up.z = _up[2];
-			change = 1;
 			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
 
 		}
@@ -246,11 +263,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		static int mode = 1;
 		if (ImGui::RadioButton("Perspective", mode == Perspective)) {
 			mode = Perspective; 
-			change = 1;
 		} ImGui::SameLine();
 		if (ImGui::RadioButton("Orthographic", mode == Orthographic)) {
-			mode = Orthographic; 
-			change = 1;
+			mode = Orthographic; ;
 		}
 
 
@@ -261,7 +276,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			static float fovy = 1.0f;
 			if (ImGui::SliderFloat("Fovy", &fovy, 0.0f, 250.0f)) {
 				camera->fovy = fovy;
-				change = 1;
 				camera->byTopBttm = false;
 			}
 			camera->SetPerspectiveProjection();
@@ -273,7 +287,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			if (ImGui::SliderFloat("Height", &height, 0.0f, 250.0f))
 			{
 				camera->height = height;
-				change = 1;
 				camera->byTopBttm = false;
 			}
 			camera->SetOrthographicProjection();
@@ -285,13 +298,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		static float rt_w_x = 0.0f, rt_w_y = 0.0f, rt_l_x = 0.0f, rt_l_y = 0.0f;
 		if (ImGui::DragFloat("Rotate Camera World X", &rt_w_x, 0.2f)) {
 			camera->at.x = rt_w_x;
-			change = 1;
 			camera->SetCameraLookAt();
 		}
 
 		if (ImGui::DragFloat("Rotate Camera World Y", &rt_w_y, 0.2f)) {
 			camera->at.y = rt_w_y;
-			change = 1;
 			camera->SetCameraLookAt();
 		}
 
@@ -299,7 +310,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 		if (ImGui::DragFloat("Rotate Camera Local", &rt_l_x, 0.2f)) {
 			camera->up.x = rt_l_x;
-			change = 1;
 			camera->SetCameraLookAt();
 		}
 
@@ -320,7 +330,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		ImGui::Checkbox("Focus", &focus);
 		if (focus) {
 			camera->SetFocus(*(scene.GetModel(scene.GetActiveModelIndex())));
-			change = 1;
 		}
 		else {
 			camera->SetCameraLookAt();
@@ -346,7 +355,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		if (ImGui::SliderFloat("worldrotate_x", &worldrotate_x, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("worldrotate_y", &worldrotate_y, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("worldrotate_z", &worldrotate_z, -20.0f, 20.0f))
-			SubmitTransform(camera, renderer, worldrotate_x, worldrotate_y, worldrotate_z, "rotate", "world", change);
+			SubmitTransform(camera, renderer, worldrotate_x, worldrotate_y, worldrotate_z, "rotate", "world");
 
 
 		static float worldscale_x = 1.0f, worldscale_y = 1.0f, worldscale_z = 1.0f, worldtranslate_x = 0.0f, worldtranslate_y = 0.0f, worldtranslate_z = 0.0f;
@@ -354,14 +363,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			ImGui::SliderFloat("worldscale_y", &worldscale_y, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("worldscale_z", &worldscale_z, -20.0f, 20.0f))
 		{
-			SubmitTransform(camera, renderer, worldscale_x, worldscale_y, worldscale_z, "scale", "world", change);
+			SubmitTransform(camera, renderer, worldscale_x, worldscale_y, worldscale_z, "scale", "world");
 		}
 
 		if (ImGui::SliderFloat("worldtranslate_x", &worldtranslate_x, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("worldtranslate_y", &worldtranslate_y, -20.0f, 20.0f) ||
 			ImGui::SliderFloat("worldtranslate_z", &worldtranslate_z, -20.0f, 20.0f))
 		{
-			SubmitTransform(camera, renderer, worldtranslate_x, worldtranslate_y, worldtranslate_z, "translate", "world", change);
+			SubmitTransform(camera, renderer, worldtranslate_x, worldtranslate_y, worldtranslate_z, "translate", "world");
 		}
 
 		//static float world_x = 0.0f;
@@ -400,13 +409,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		}
 
 		
-		static glm::vec4 mColor(colors[rand() % 6],0);
+		/*static glm::vec4 mColor(colors[rand() % 6],0);*/
+		static glm::vec4 mColor(1.0f, 1.0f, 1.0f, 1.0f);
 		if (ImGui::ColorEdit3("Model Color", (float*)&mColor))
 			model->SetColor(mColor);
 
 		static float scale_model = 1.0f; 
 		if (ImGui::DragFloat("Scale model", &scale_model, 0.1f)) {
-			SubmitTransform(model, renderer, scale_model, scale_model, scale_model, "scale", "object", change);
+			SubmitTransform(model, renderer, scale_model, scale_model, scale_model, "scale", "object");
 			scale_x = scale_model;
 			scale_y = scale_model;
 			scale_z = scale_model;
@@ -416,13 +426,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		if (ImGui::DragFloat("scale x", &scale_x, 0.05f) ||
 			ImGui::DragFloat("scale y", &scale_y, 0.05f) ||
 			ImGui::DragFloat("scale z", &scale_z, 0.05f))
-			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object", change);
+			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object");
 
 		static float  translate_x = 0.0f, translate_y = 0.0f, translate_z = 0.0f;
 		if (ImGui::DragFloat("translate x", &translate_x, 0.05f) ||
 			ImGui::DragFloat("translate y", &translate_y, 0.05f) ||
 			ImGui::DragFloat("translate z", &translate_z, 0.05f))
-			SubmitTransform(model, renderer, translate_x, translate_y, translate_z, "translate", "object", change);
+			SubmitTransform(model, renderer, translate_x, translate_y, translate_z, "translate", "object");
 
 		//rotate model around axis
 		static float xrotate = 0.0f, yrotate = 0.0f, zrotate = 0.0f;
@@ -433,7 +443,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			if (xrotate >= 180 || xrotate <= -180) xrotate = 0;
 			if (yrotate >= 360 || yrotate <= -360) yrotate = 0;
 			if (zrotate >= 180 || zrotate <= -180) zrotate = 0;
-			SubmitTransform(model, renderer, xrotate, yrotate, zrotate, "rotate", "object", change);
+			SubmitTransform(model, renderer, xrotate, yrotate, zrotate, "rotate", "object");
 		}
 
 
@@ -447,10 +457,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 		/*     Draw Box     */
 		static bool drawBox = false;
 		ImGui::Checkbox("Draw bounding box", &drawBox);
-		if (drawBox) {
+		if (drawBox) 
 			scene.toDrawBox = true;
-			change = 1;
-		}
 		else
 			scene.toDrawBox = false;
 
@@ -471,14 +479,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 			if (ImGui::RadioButton("Face", normals_mode == Face)) { normals_mode = Face; }
 			ImGui::SliderFloat("Normals size", &normal_size, 0.00f, 3.0f);
 
-			if (normals_mode == Vertex) {// TODO change = 1;
-				change = 1;
+			if (normals_mode == Vertex) 
 				scene.SetDrawNormals(true, "vertex", normal_size);
-			}
-			if (normals_mode == Face) {// TODO change = 1;
-				change = 1;
+			
+			if (normals_mode == Face) 
 				scene.SetDrawNormals(true, "face", normal_size);
-			}
+			
 
 		}
 		else 
@@ -523,7 +529,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 						scene.SetActiveModelIndex(scene.GetModelCount() - 1);
 						(scene.GetModel(scene.GetActiveModelIndex()))->SetColor(colors[rand() % 6]);
 						free(outPath);
-						change = 1;
 					}
 					else if (result == NFD_CANCEL) {
 					}
@@ -560,13 +565,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer, int& change)
 
 }
 
-void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name, std::string genreTransformation, int& change)
+void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float x, float y, float z, std::string name, std::string genreTransformation)
 {
 	model->SetTransform(name, { x,y,z });
 	model->SetCordinates(glm::vec3(x, y, z), name);
 	renderer.SetTransformation(*model, genreTransformation);
 	// the reason z models cant rotate around z axis..
 	model->InitCordinate();
-	change = 1;
 }
 
