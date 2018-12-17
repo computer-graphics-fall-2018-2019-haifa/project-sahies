@@ -25,7 +25,7 @@ MeshModel::MeshModel(const std::vector<Face>& faces, const std::vector<glm::vec3
 	this->faces = faces;
 	this->normals = normals;
 	SetColor(glm::vec3(1));
-
+	this->newVertices = vertices;
 	ambient = 0.2;
 	specular = 0.2;
 	diffuse = 0.2;
@@ -47,6 +47,7 @@ MeshModel::MeshModel(const MeshModel& model)
 	translate = glm::vec3(0);
 	scale = glm::vec3(1);
 	rotate = glm::vec3(0);
+	this->newVertices = vertices;
 }
 
 

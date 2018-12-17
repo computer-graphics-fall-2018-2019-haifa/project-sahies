@@ -25,10 +25,9 @@ private:
 protected:
 	glm::mat4x4 worldTransform; 
 	glm::mat4x4 objectTransform;
-	std::vector<glm::mat4> matTransformations;
 	std::vector<glm::mat4> matWorldTransformations;
 	std::vector<glm::vec3> vertices;
-	glm::vec3 color;
+	glm::vec3 color = glm::vec3(0);
 	std::vector<Face> faces;
 
 
@@ -40,7 +39,9 @@ public:
 	glm::vec3 rotate;
 	glm::vec3 scale;
 	std::vector<glm::vec3> cordinatesTransformations;
-	
+
+	std::vector<glm::mat4> matTransformations;
+	std::string type;
 	float ambient;
 	float specular;
 	float diffuse;

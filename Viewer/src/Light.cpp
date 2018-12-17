@@ -10,8 +10,8 @@
 #include <cmath>
 
 
-Light::Light(std::shared_ptr<MeshModel>& model):
-	MeshModel(*model)
+Light::Light(MeshModel& model):
+	MeshModel(model)
 {
 	this->color = glm::vec3(0,1,1);
 }
@@ -43,23 +43,19 @@ glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal)
 	const auto PI = std::acos(-1);
 
 	glm::vec3 Ia = light_power * color; // TODO:  its constant for every light (not need to add twice for two lights)
-	glm::vec3 light_pos = Light::CenterShift(translate); // model * object_T * world_T?
-	//glm::vec3 light_pos = glm::vec3(-6,3,0);
+	//glm::vec3 light_pos = Light::CenterShift(translate); // model * object_T * world_T?
+	//glm::vec4 t = glm::vec4(vertices[0], 1) *(Utils::GetMatrix("translate", translate) *  Utils::GetMatrix("rotate", rotate) *  Utils::GetMatrix("scale", scale));
+	glm::vec3 light_pos = translate + Light::CenterShift(translate);
 	glm::vec3 light_normal = glm::normalize(normal*(light_pos - point)) ;
 	glm::vec3 model_normal = glm::normalize(normal);
 	float LN = glm::dot(light_normal, model_normal);
 
-	//float angle = glm::acos(VN/(light_normal*model_normal))/** 180 / 3.14*/;
-	//glm::vec3 Id(0);
-	//if (angle > 0 && angle< 90)
-	//if (!(VN > 0 && VN < 180))
-	//	VN = 0;
 
 	float angle = std::acos(LN) * PI / 180;
 	//glm::vec3 Id(0);
 	if (angle < 0 || angle > 90)
 		return glm::vec3(0);
-	glm::vec3 Id = glm::vec3(light_power) * /*vault_diffuse*/0.4f * LN /** color*/; // cos >= 0 to see stuff
+	glm::vec3 Id = glm::vec3(light_power) * vault_diffuse * LN  * color; // cos >= 0 to see stuff
 
 
 	glm::vec3 light_h = light_normal - LN * normal;
@@ -74,16 +70,9 @@ glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal)
 	//VR = VR > 0.0f ? VR : 0.0f;
 
 	float a = 200; // TODO
-	glm::vec3 Is = /*vault_specular*/ 0.1f *  glm::vec3(light_power)  * light_normal * glm::pow(VR,a)/** color*/;
+	glm::vec3 Is = /*vault_specular*/ 0.1f *  glm::vec3(light_power)  * light_normal * glm::pow(VR,/*a*/ exponent)/** color*/;
 
-	/*glm::vec3 Is = glm::vec3 Reflect(glm::reflect(
-	glm::normalize(-LightVector),
-		glm::normalize(Intersection.normal())));
-		float Dot = glm::dot(Reflect, View);
-		float Base = Dot > 0.0f ? Dot : 0.0f;
-		float Specular = glm::pow(Base, Material.exponent());
-		Color += Material.specular() * Specular;*/
-	/*this->all = Ia + Ib + Ic;*/
-	return Ia + Id + Is;
+
+	return /*Ia + */Id /*+ Is*/;
 }
 

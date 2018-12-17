@@ -52,6 +52,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	std::string camera_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\camera.obj";
 	std::string light_path = "C:\\Users\\Berger\\Documents\\GitHub\\project-sahies2\\Data\\obj_examples\\demo.obj";
 	static int CameraCounter = 0;
+	static int LightCounter = 0;
 	static int counter = 0;
 	static float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f, world_y = 0.0f, world_z = 0.0f, scale_all = 1.0f, tr_all = 1.0f, rotate_all = 0.0, left, right, bottom, top, zFar, aspect, normal_size;
 	std::string projectionType, draw_genre;
@@ -82,18 +83,19 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	/*****************   Light Menu   *****************/
 	if (ImGui::CollapsingHeader("Light"))
 	{
-		//static glm::vec4 lightColor(colors[rand() % 6], 0);
-		static glm::vec4 lightColor(1.0f, 1.0f, 1.0f,1.0f);
+		static glm::vec4 lColor(1.0f, 1.0f, 1.0f,1.0f);
 		if (ImGui::Button("Add Light"))
 		{
 			std::shared_ptr<MeshModel> light_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(light_path));
 			
-			light_obj->SetColor(lightColor);
-	
-
-			//scene.AddModel(light_obj);
-			std::shared_ptr<Light> lig = std::make_shared<Light>(light_obj);
+			light_obj->SetModelName("Light " + std::to_string(LightCounter));
+			LightCounter++;
+			std::shared_ptr<Light> lig = std::make_shared<Light>(*light_obj);
 			SubmitTransform(lig, renderer, -6, 3, 0, "translate", "object");
+			SubmitTransform(lig, renderer, 0.1, 0.1, 1, "scale", "object");
+			SubmitTransform(lig, renderer, 1, -5, 1, "rotate", "object");
+			//lig->matTransformations = { Utils::GetMatrix("scale",0.1,0.1,1), Utils::GetMatrix("rotate",1, -5, 1), Utils::GetMatrix("translate",-6,3,0) };
+			lig->SetColor(glm::vec3(1));
 			scene.AddLight(lig);
 			scene.SetActiveLightIndex(scene.lights.size() - 1);
 		}
@@ -102,7 +104,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		{
 			std::shared_ptr<Light> active_light = scene.lights[scene.activeLightIndex];
 
-			static float ambient_vault = 0.5f, spec_vault = 0.5f, diffuse_vault = 0.5f;
+			static float ambient_vault = 0.2f, spec_vault = 0.2f, diffuse_vault = 0.2f;
 			if (ImGui::SliderFloat("Ambient Vault", &ambient_vault, 0.0f, 1.0f) ||
 				ImGui::SliderFloat("Specular Vault", &spec_vault, 0.0f, 1.0f) ||
 				ImGui::SliderFloat("Diffuse Vault", &diffuse_vault, 0.0f, 1.0f)) {
@@ -112,8 +114,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 			if (ImGui::SliderFloat("Light Power", &active_light->light_power, 0.0f, 1.0f));
 		
-			if (ImGui::ColorEdit3("Light Color", (float*)&lightColor))
-				active_light->SetColor(lightColor);
+			if (ImGui::ColorEdit3("Light Color", (float*)&lColor))
+				active_light->SetColor(lColor);
+
+			ImGui::DragInt("Specular exponent", &active_light->exponent, 1);
 
 			enum Mode
 			{
@@ -136,7 +140,31 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				scene.draw_style = "phong";
 			}
 
+			static float scale_light = 1.0f;
+			if (ImGui::DragFloat("Scale Light", &scale_light, 0.1f)) {
+				SubmitTransform(active_light, renderer, scale_light, scale_light, scale_light, "scale", "object");
+				scale_x = scale_light;
+				scale_y = scale_light;
+				scale_z = scale_light;
+			}
 
+			static float  translate_light_x = 0.0f, translate_light_y = 0.0f, translate_light_z = 0.0f;
+			if (ImGui::DragFloat("translate x", &translate_light_x, 0.05f) ||
+				ImGui::DragFloat("translate y", &translate_light_y, 0.05f) ||
+				ImGui::DragFloat("translate z", &translate_light_z, 0.05f))
+				SubmitTransform(active_light, renderer, translate_light_x, translate_light_y, translate_light_z, "translate", "object");
+
+			//rotate model around axis
+			static float light_xrotate = 0.0f, light_yrotate = 0.0f, light_zrotate = 0.0f;
+			if (ImGui::DragFloat("rotate around x", &light_xrotate, 0.5f) ||
+				ImGui::DragFloat("rotate around y", &light_yrotate, 0.5f) ||
+				ImGui::DragFloat("rotate around z", &light_zrotate, 0.5f))
+			{
+				if (light_xrotate >= 180 || light_xrotate <= -180) light_xrotate = 0;
+				if (light_yrotate >= 360 || light_yrotate <= -360) light_yrotate = 0;
+				if (light_zrotate >= 180 || light_zrotate <= -180) light_zrotate = 0;
+				SubmitTransform(active_light, renderer, light_xrotate, light_yrotate, light_zrotate, "rotate", "object");
+			}
 		}
 	}
 
@@ -410,7 +438,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 		
 		/*static glm::vec4 mColor(colors[rand() % 6],0);*/
-		static glm::vec4 mColor(1.0f, 1.0f, 1.0f, 1.0f);
+		static glm::vec4 mColor(1.0f, 1.0f, 1.0f, 0.0f);
 		if (ImGui::ColorEdit3("Model Color", (float*)&mColor))
 			model->SetColor(mColor);
 
@@ -570,7 +598,6 @@ void SubmitTransform(std::shared_ptr<MeshModel> model, Renderer& renderer, float
 	model->SetTransform(name, { x,y,z });
 	model->SetCordinates(glm::vec3(x, y, z), name);
 	renderer.SetTransformation(*model, genreTransformation);
-	// the reason z models cant rotate around z axis..
 	model->InitCordinate();
 }
 

@@ -55,6 +55,7 @@ public:
 	glm::vec3 Renderer::VertexXmat(glm::vec3 vertex, glm::mat4 matrix);
 	glm::vec2 Renderer::BcCords2D(const std::vector<glm::vec3>& vertices, const glm::vec3& p);
 	void Renderer::FillTriangle(std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>&  normals , std::vector<std::shared_ptr<Light>>&  light, glm::vec3 mColor, std::string draw_style);
+	void Renderer::FillLight(std::vector<glm::vec3>&  vertices, glm::vec3 mColor, float light_power);
 	glm::mat4 Renderer::UpdateChangesLight(std::shared_ptr<Light>& model, std::shared_ptr<Camera>& active_camera);
 	void Renderer::UpdateVertecisByTransformations(std::shared_ptr<Light>& model, glm::mat4& transformation);
 	void Renderer::RenderGrid(glm::mat4x4 rotateMatrix, glm::vec3& color);

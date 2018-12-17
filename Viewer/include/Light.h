@@ -9,13 +9,13 @@ private:
 
 
 public:
-	float vault_diffuse;
-	float vault_ambient;
-	float vault_specular;
-
+	float vault_diffuse = 0.2;
+	float vault_ambient = 0.2;
+	float vault_specular = 0.2;
+	int exponent = 1;
 	float light_power = 0.5;
 
-	Light(std::shared_ptr<MeshModel>& model);
+	Light(MeshModel& model);
 	~Light();
 	void Light::SetMaterialVault(glm::vec3 mat);
 	glm::vec3 Light::SetIlum(glm::vec3 point,glm::vec3 normal);

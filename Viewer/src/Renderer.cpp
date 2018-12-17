@@ -8,7 +8,7 @@
 #include <vector>
 #include <cmath>
 #include "ImguiMenus.h"
-
+#include <regex>
 
 #define inTriangle(a,b) (a >= 0 && b >= 0 && (a + b <= 1)) ? 1:0
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
@@ -176,36 +176,34 @@ glm::vec3 Renderer::VertexXmat(glm::vec3 vertex, glm::mat4 matrix)
 int count = 0;
 void Renderer::Render(Scene& scene)
 {
+	std::shared_ptr<Camera> active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
+
+	if (scene.lights.size() > 0)
+	{
+		for (auto light : scene.lights)
+		{
+			glm::mat4 lightTransformations = UpdateChangesLight(light, active_camera);
+			UpdateVertecisByTransformations(light, lightTransformations);
+			for (auto face : light->GetFaces())
+				FillLight(FromVecToTriangle(face, light->GetNewVertices()), light->GetColor(), light->light_power);
+		}
+	}
+
 
 	if (scene.GetModelCount())
 	{
-		std::shared_ptr<Camera> active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
-
-
-		//std::vector<glm::vec3> light_normals(/*model->GetNewNormalVertices().size()*/200);
-		//for (glm::vec3 l : light_normals)
-		//	l = glm::vec3(0);
-		//if (scene.lights.size() > 0)
-		//{
-		//	for (auto light : scene.lights)
-		//	{
-		//		glm::mat4 lightTransformations = UpdateChangesLight(light, active_camera);
-		//		UpdateVertecisByTransformations(light, lightTransformations);
-		//		light_normals = Utils::CalcNormals(light->GetVertices(), light->GetFaces()); // +=
-		//	}
-		//}
-
 
 		glm::mat4 cameraTransformations = UpdateChangesCamera(active_camera);
 		DrawAxes(1000, active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()));
-		//RenderGrid(active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()),glm::vec3(0,1,0));
+
 		for (auto model : scene.GetModels()) {
 			glm::mat4 modelTransformations = UpdateChangesModel(model, active_camera);
 			if (active_camera->GetModelName() == model->GetModelName()) {
 				UpdateVertecisByTransformations(active_camera, cameraTransformations);
 				continue;
 			}
-			else {
+			else 
+			{
 				UpdateVertecisByTransformations(model, modelTransformations);
 				DrawAxes(1000, active_camera->GetProjection() * glm::inverse(active_camera->GetViewTransformation()) * model->GetWorldTransformation() * model->GetObjectTransformation());
 				if (scene.toDrawBox) {
@@ -230,7 +228,32 @@ void Renderer::Render(Scene& scene)
 
 
 
+void Renderer::FillLight(std::vector<glm::vec3>&  vertices,  glm::vec3 mColor, float light_power)
+{
 
+	glm::vec3 min = MeshModel::findMin({ vertices[0], vertices[1], vertices[2] });
+	glm::vec3 max = MeshModel::findMax({ vertices[0], vertices[1], vertices[2] });
+
+	for (int x = min.x; x <= max.x; x++)
+	{
+		for (int y = min.y; y <= max.y; y++)
+		{
+			glm::vec3 p = glm::vec3(x, y, 0);
+			glm::vec2 bcCords = BcCords2D(vertices, p);
+
+			if (inTriangle(bcCords[0], bcCords[1]))
+			{
+				float lambda1 = 1 - bcCords.x - bcCords.y;
+				float lambda2 = bcCords.x;
+				float lambda3 = bcCords.y;
+
+				float z_reciprocal = lambda1 * (1 / vertices[0].z) + lambda2 * (1 / vertices[1].z) + lambda3 * (1 / vertices[2].z);
+
+				putPixel(x, y, light_power * mColor, 1 / z_reciprocal);
+			}
+		}
+	}
+}
 
 void Renderer::FillTriangle(std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>&  normals, std::vector<std::shared_ptr<Light>>&  lights, glm::vec3 mColor, std::string draw_style)
 {
