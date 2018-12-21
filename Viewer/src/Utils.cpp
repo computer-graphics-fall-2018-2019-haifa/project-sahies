@@ -317,3 +317,55 @@ std::vector<glm::vec3> Utils::CalcNormals(std::vector<glm::vec3>& vertices, std:
 
 	return normals;
 }
+
+
+
+std::vector<glm::vec3> Utils::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix)
+{
+	std::vector<glm::vec3> new_vertices3d = Utils::Vec4to3(Utils::Vec3to4Xmat(vertices, matrix));
+	return new_vertices3d;
+}
+
+
+std::vector<glm::vec3> Utils::CalcNorm(Face& face, std::vector<glm::vec3>& normals, std::vector<glm::vec3>&  vertices, std::string draw_genre, float size_normal, float viewportWidth, float viewportHeight)
+{
+	int x_center = viewportWidth / 2;
+	int y_center = viewportHeight / 2;
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
+
+	int a = face.GetVertexIndex(0) - 1;
+	int b = face.GetVertexIndex(1) - 1;
+	int c = face.GetVertexIndex(2) - 1;
+
+	int a_n = face.GetNormalIndex(0) - 1;
+	int b_n = face.GetNormalIndex(1) - 1;
+	int c_n = face.GetNormalIndex(2) - 1;
+
+
+
+	if (draw_genre == "face") {
+
+		glm::vec3 point = (vertices[a] + vertices[b] + vertices[c]) / glm::vec3(3),
+			normal = glm::cross(vertices[b] - vertices[a], vertices[c] - vertices[a]),
+			end = point + normal * size_normal;
+
+		return { point, normal, end };
+	}
+	else
+	{
+		glm::vec3 a_end = glm::vec3(vertices[a].x + size_normal * normals[a_n].x, vertices[a].y + size_normal * normals[a_n].y, vertices[a].z + size_normal * normals[a_n].z),
+				  b_end = glm::vec3(vertices[b].x + size_normal * normals[b_n].x, vertices[b].y + size_normal * normals[b_n].y, vertices[b].z + size_normal * normals[b_n].z),
+				  c_end = glm::vec3(vertices[c].x + size_normal * normals[c_n].x, vertices[c].y + size_normal * normals[c_n].y, vertices[c].z + size_normal * normals[c_n].z);
+
+
+		a_end += center_shift;
+		b_end += center_shift;
+		c_end += center_shift;
+
+		std::vector<glm::vec3> start = { vertices[a] + center_shift ,vertices[b] + center_shift ,vertices[c] + center_shift };
+
+		return { start[0] - a_end , start[1] - b_end , start[2] - c_end };
+
+
+	}
+}

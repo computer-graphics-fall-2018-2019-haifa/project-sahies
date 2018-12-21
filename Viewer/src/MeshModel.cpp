@@ -82,6 +82,21 @@ void MeshModel::SetWorldTransformation()
 	 return this->newNormalVertices;
  }
 
+ void MeshModel::UpdateChangesModel(glm::mat4 projection, glm::mat4 view_transform, glm::mat4 worldTransformation)
+ {
+	 this->SetWorldTransformation();
+	 this->SetObjectTransformation();
+	 //glm::vec2 x = model->ScaleSize(model->GetVertices(), 1280.0f, 720.0f);
+	 this->model_transform_without_projection = view_transform * worldTransformation  *this->GetObjectTransformation();
+	 this->model_transform =  /*Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1) * */ projection * view_transform * worldTransformation  *this->GetObjectTransformation();
+	 std::vector<glm::vec3> /*new_vec_n,*/ new_vec;
+	 //new_vec_n = Utils::VerticesXmat(this->GetNormals(), Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1));
+	 newNormalVertices = Utils::VerticesXmat(normals, model_transform);
+	 newVerticesRender = Utils::VerticesXmat(this->GetVertices(), model_transform);
+	 newVertices = Utils::VerticesXmat(this->GetVertices(), model_transform_without_projection);
+
+ }
+
 void MeshModel::SetObjectTransformation()
 {
 	this->objectTransform = matTransformations[2] * matTransformations[0] * matTransformations[1];
@@ -169,7 +184,6 @@ void MeshModel::SetCordinates(const glm::vec3& cordinates, std::string& name)
 		this->cordinatesTransformations[0] += cordinates;
 	else if (name == "translate") 
 		this->cordinatesTransformations[2] += cordinates;
-	
 	else 
 		this->cordinatesTransformations[1] += cordinates;
 }

@@ -18,8 +18,8 @@ Camera::Camera( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up, MeshModel& model
 	this->right = 1;
 	this->bottom = -1;
 	this->top = 1;
-	this->zNear = 1;
-	this->zFar = 10;
+	this->zNear = 10;
+	this->zFar = 100;
 	this->fovy = 26;
 	this->aspect = 1280.0f/720.0f;
 	this->height = 1;
@@ -74,9 +74,9 @@ void Camera::SetCameraLookAt( glm::vec3& e,  glm::vec3& a,  glm::vec3& u)
 	identity[3] -= glm::vec4(e,1) - glm::vec4(0, 0, 0, 1);
 
 	this->viewTransformation = c * identity * Utils::GetMatrix("scale", zoom);*/
-	glm::vec3 _eye = (Utils::GetMatrix("translate", translate)  * glm::vec4(e[0], e[1], e[2], 1));
-	glm::vec3 _up = Utils::GetMatrix("rotate", rotate) * glm::vec4(u[0], u[1], u[2], 1);
-	glm::vec3 _at = (Utils::GetMatrix("translate", translate)  * Utils::GetMatrix("rotate", rotate)) * glm::vec4(a[0], a[1], a[2], 1);
+	glm::vec3 _eye = /*(Utils::GetMatrix("translate", translate)  * */glm::vec4(e[0], e[1], e[2], 1);
+	glm::vec3 _up = /*Utils::GetMatrix("rotate", rotate) * */glm::vec4(u[0], u[1], u[2], 1);
+	glm::vec3 _at = /*(Utils::GetMatrix("translate", translate)  **/ /*Utils::GetMatrix("rotate", rotate)) **/ glm::vec4(a[0], a[1], a[2], 1);
 
 	glm::vec3 z = glm::normalize(_eye - _at);
 	glm::vec3 x = glm::normalize(glm::cross(_up, z));
@@ -179,7 +179,7 @@ void Camera::SetPerspectiveProjection(
 	mat[2] = glm::vec4((right + left) / (right - left), (top + bottom) / (top - bottom), -1 * (_far + _near) / (_far - _near),-1);
 	mat[3] = glm::vec4(0,0, -2 * (_far * _near) / (_far - _near),0);
 	this->projectionTransformation = mat;
-	eye.z = -6;
+	eye.z = 125;
 	SetCameraLookAt();
 }
 

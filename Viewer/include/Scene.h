@@ -30,7 +30,10 @@ public:
 	std::string draw_genre;
 	float normal_size;
 	int activeLightIndex = 0;
-	std::string draw_style;
+	std::string draw_style = "flat";
+	bool fog;
+	glm::vec3 fog_color;
+	bool isPerspective = false;
 	//c'tor
 	Scene();
 
@@ -44,15 +47,18 @@ public:
 	// Getters
 	const int GetModelCount() const;
 	const std::shared_ptr<MeshModel> Scene::GetModel(int index) const;
+	const std::shared_ptr<Light> Scene::GetLight(int index) const;
 	//const std::shared_ptr<MeshModel> Scene::GetModel(int index) const;
 	const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const;
 	const std::vector<std::shared_ptr<Camera>> Scene::GetCameras() const;
+	const std::vector<std::shared_ptr<Light>> Scene::GetLights() const;
 	const int GetCameraCount() const;
 	//const std::vector<Camera> Scene::GetCameras() const;
 	const int GetActiveCameraIndex() const;
 	const std::shared_ptr<Camera> GetCamera(int index) const;
 	std::vector<std::string>Scene::GetModelsNames();
 	std::vector<std::string>Scene::GetCamerasNames();
+	std::vector<std::string>Scene::GetLightsNames();
 	const int GetActiveModelIndex() const;
 	const float GetDrawNormals(std::string& type) const;
 

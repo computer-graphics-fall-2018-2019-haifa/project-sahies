@@ -22,12 +22,12 @@ Light::~Light()
 {
 }
 
-void Light::SetMaterialVault(glm::vec3 mat)
-{
-	vault_diffuse = mat[0];
-	vault_ambient = mat[1];
-	vault_specular = mat[2];
-}
+//void Light::SetMaterialVault(glm::vec3 mat)
+//{
+//	vault_diffuse = mat[0];
+//	vault_ambient = mat[1];
+//	vault_specular = mat[2];
+//}
 
 
 glm::vec3 Light::CenterShift(glm::vec3 vec)
@@ -38,41 +38,50 @@ glm::vec3 Light::CenterShift(glm::vec3 vec)
 	return vec + center_shift;
 }
 
-glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal)
+
+glm::vec3 Light::setFog(glm::vec3 fog_color, float z, float z_near, float z_far)
 {
-	const auto PI = std::acos(-1);
-
-	glm::vec3 Ia = light_power * color; // TODO:  its constant for every light (not need to add twice for two lights)
-	//glm::vec3 light_pos = Light::CenterShift(translate); // model * object_T * world_T?
-	//glm::vec4 t = glm::vec4(vertices[0], 1) *(Utils::GetMatrix("translate", translate) *  Utils::GetMatrix("rotate", rotate) *  Utils::GetMatrix("scale", scale));
-	glm::vec3 light_pos = translate + Light::CenterShift(translate);
-	glm::vec3 light_normal = glm::normalize(normal*(light_pos - point)) ;
-	glm::vec3 model_normal = glm::normalize(normal);
-	float LN = glm::dot(light_normal, model_normal);
-
-
-	float angle = std::acos(LN) * PI / 180;
-	//glm::vec3 Id(0);
-	if (angle < 0 || angle > 90)
-		return glm::vec3(0);
-	glm::vec3 Id = glm::vec3(light_power) * vault_diffuse * LN  * color; // cos >= 0 to see stuff
-
-
-	glm::vec3 light_h = light_normal - LN * normal;
-	glm::vec3 light_w = LN * normal;
-	glm::vec3 R = glm::normalize(light_w - light_h);
-	glm::vec3 new_pos = Utils::Vertex4to3(glm::vec4(R, 1) * Utils::GetMatrix("translate", 4, 1, 1));
-	glm::vec3 v_normal = glm::normalize(normal*(new_pos - point));
-	float VR = glm::dot(R, v_normal);
-	float angleVR = std::acos(VR * PI / 180);
-	if (angleVR < 0)
-		VR = 1;
-	//VR = VR > 0.0f ? VR : 0.0f;
-
-	float a = 200; // TODO
-	glm::vec3 Is = /*vault_specular*/ 0.1f *  glm::vec3(light_power)  * light_normal * glm::pow(VR,/*a*/ exponent)/** color*/;
-
-
-	return /*Ia + */Id /*+ Is*/;
+	float distance = glm::abs(z);
+	float factor = glm::clamp((z_far  - distance) / (z_far - z_near),0.0f,1.0f);
+	return (1 - factor) * this->ilum_color + factor * fog_color;
 }
 
+
+
+glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal, glm::vec3 eye, std::string shade_style, std::shared_ptr<MeshModel>& model)
+{
+	// ambient 
+
+	//diffuse
+	glm::vec3 min = MeshModel::findMin(newVertices);
+	glm::vec3 max = MeshModel::findMax(newVertices);
+
+
+	glm::vec3 light_pos = /*glm::vec3(max.x,min.y,min.z)*/ Utils::Vertex4to3(model_transform_without_projection * glm::vec4(translate, 1));
+	//glm::vec3 model_pos = Utils::Vertex4to3(model->model_transform_without_projection * glm::vec4(model->translate, 1));
+
+	glm::vec3 light_normal = glm::normalize(point - light_pos);
+	if (shade_style == "flat")
+		light_normal = glm::normalize(light_pos - point);
+	glm::vec3 model_normal = glm::normalize(normal);
+	light_normal = glm::normalize(normal);
+	float LN = std::max(glm::dot(light_normal, model_normal), 0.0f);
+
+
+	// specular
+	glm::vec3 v_normal = glm::normalize(eye - point);
+	glm::vec3 R = glm::normalize((2.0f * (glm::dot(model_normal, light_normal)) * model_normal) - light_normal);
+	//glm::vec3 R = glm::normalize(2.0f * light_normal * model_normal - light_normal);
+	//glm::vec3 to_camera = glm::normalize (-1.0f * point);
+	//float VR = std::max(glm::dot(R, v_normal),1.0f);
+	float VR = glm::dot(R, v_normal);
+
+
+	//glm::vec3 Ia = vault_ambient * color;
+	glm::vec3 Id = model->diffuse * LN  * color;
+	glm::vec3 Is = model->specular  /** light_normal */ * glm::pow(VR,model->exponent)* color;
+
+	this->ilum_color = light_power * (Id + Is);
+
+	return ilum_color;
+}

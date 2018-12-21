@@ -30,6 +30,11 @@ const std::shared_ptr<MeshModel> Scene::GetModel(int index) const
 	return models[index];
 }
 
+const std::shared_ptr<Light> Scene::GetLight(int index) const
+{
+	return lights[index];
+}
+
 const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const
 {
 	return models;
@@ -38,6 +43,11 @@ const std::vector<std::shared_ptr<MeshModel>> Scene::GetModels() const
 const std::vector<std::shared_ptr<Camera>> Scene::GetCameras() const
 {
 	return cameras;
+}
+
+const std::vector<std::shared_ptr<Light>> Scene::GetLights() const
+{
+	return lights;
 }
 
 /*
@@ -90,6 +100,14 @@ std::vector<std::string>Scene::GetCamerasNames()
 	std::vector<std::string> names;
 	for (int i = 0; i < GetCameraCount(); i++)
 		names.push_back(cameras[i]->GetModelName());
+	return names;
+}
+
+std::vector<std::string> Scene::GetLightsNames()
+{
+	std::vector<std::string> names;
+	for (int i = 0; i < lights.size(); i++)
+		names.push_back(lights[i]->GetModelName());
 	return names;
 }
 

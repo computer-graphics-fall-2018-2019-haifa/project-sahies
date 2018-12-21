@@ -22,6 +22,7 @@ static int c_idx = 0;
 std::vector<glm::vec3> colors = { glm::vec3(0.87,0.58,0.98), glm::vec3(0.8 , 0.498039 , float(0.196078)),
 		glm::vec3(0,1,0),glm::vec3(0,0,1), glm::vec3(1,0,1), glm::vec3(1,1,0), glm::vec3(0,1,1) };
 glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.00f);
+float count_ambient = 0;
 
 const glm::vec4& GetClearColor()
 {
@@ -69,7 +70,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 	static std::shared_ptr<Camera> camera = scene.GetCamera(scene.GetActiveCameraIndex());
-	
 
 	std::vector <std::shared_ptr<MeshModel>> models = scene.GetModels();
 	std::shared_ptr<MeshModel> model = scene.GetModel(scene.GetActiveModelIndex());
@@ -84,6 +84,39 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	if (ImGui::CollapsingHeader("Light"))
 	{
 		static glm::vec4 lColor(1.0f, 1.0f, 1.0f,1.0f);
+
+		enum Light_Source
+		{
+			Point,
+			Parallel,
+			Ambient
+		};
+
+		static int light_s = 0;
+		static std::string sour;
+
+		if (ImGui::RadioButton("Point", light_s == Point))
+		{
+			light_s = Point;
+			sour = "point";
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Parallel", light_s == Parallel))
+		{
+			light_s = Parallel;
+			sour = "parallel";
+		}
+		ImGui::SameLine();
+		if (count_ambient == 0)
+		{
+			if (ImGui::RadioButton("Ambient", light_s == Ambient))
+			{
+				light_s = Ambient;
+				sour = "ambient";
+			}
+		}
+
+
 		if (ImGui::Button("Add Light"))
 		{
 			std::shared_ptr<MeshModel> light_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(light_path));
@@ -96,28 +129,62 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			SubmitTransform(lig, renderer, 1, -5, 1, "rotate", "object");
 			//lig->matTransformations = { Utils::GetMatrix("scale",0.1,0.1,1), Utils::GetMatrix("rotate",1, -5, 1), Utils::GetMatrix("translate",-6,3,0) };
 			lig->SetColor(glm::vec3(1));
+			lig->source = sour;
 			scene.AddLight(lig);
 			scene.SetActiveLightIndex(scene.lights.size() - 1);
+			std::shared_ptr<Light> active_light = scene.GetLight(scene.activeLightIndex);
+	
+		}
+
+		//make a list of the cameras names
+		std::vector<std::shared_ptr<Light>> lights = scene.GetLights();
+		std::vector<std::string> lights_names = scene.GetLightsNames();
+		if (lights_names.size() > 0) {
+
+
+
+
+			char** c_light_names = new char*[lights.size()];
+			for (int i = 0; i < lights.size(); i++)
+				c_light_names[i] = const_cast<char*>(lights_names[i].c_str());
+
+			int active_light_idx = scene.activeLightIndex;
+			ImGui::Combo("Active Light", &active_light_idx, c_light_names, lights_names.size());
+			scene.SetActiveLightIndex(active_light_idx);
+			std::shared_ptr<Light> active_light = scene.GetLight(active_light_idx);
+			delete[] c_light_names;
+
+	
 		}
 
 		if (scene.lights.size() > 0)
 		{
 			std::shared_ptr<Light> active_light = scene.lights[scene.activeLightIndex];
 
-			static float ambient_vault = 0.2f, spec_vault = 0.2f, diffuse_vault = 0.2f;
-			if (ImGui::SliderFloat("Ambient Vault", &ambient_vault, 0.0f, 1.0f) ||
-				ImGui::SliderFloat("Specular Vault", &spec_vault, 0.0f, 1.0f) ||
+			/*static float spec_vault = 0.0f, diffuse_vault = 0.2f;
+			if (ImGui::SliderFloat("Specular Vault", &spec_vault, 0.0f, 1.0f) ||
 				ImGui::SliderFloat("Diffuse Vault", &diffuse_vault, 0.0f, 1.0f)) {
-				glm::vec3 m = glm::vec3(diffuse_vault, ambient_vault, spec_vault);
+				glm::vec3 m = glm::vec3(diffuse_vault, 0, spec_vault);
 				active_light->SetMaterialVault(m);
-			}
+			}static float ambient_vault = 0.0f;
+			ImGui::SliderFloat("Ambient Vault", &active_light->vault_ambient, 0.0f, 1.0f);*/
 
 			if (ImGui::SliderFloat("Light Power", &active_light->light_power, 0.0f, 1.0f));
 		
 			if (ImGui::ColorEdit3("Light Color", (float*)&lColor))
 				active_light->SetColor(lColor);
 
-			ImGui::DragInt("Specular exponent", &active_light->exponent, 1);
+		
+			static bool fog = false;
+			static glm::vec3 fogColor = glm::vec3(1);
+			ImGui::Checkbox("Fog", &fog);
+			if (fog) {
+				scene.fog = true;
+				if (ImGui::ColorEdit3("Fog Color", (float*)&fogColor))
+					scene.fog_color = fogColor;
+			}
+			else
+				scene.fog = false;
 
 			enum Mode
 			{
@@ -127,6 +194,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			};
 
 			static int style = 0;
+		
 			if (ImGui::RadioButton("Flat", style == Flat)) {
 				style = Flat;
 				scene.draw_style = "flat";
@@ -141,30 +209,36 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			}
 
 			static float scale_light = 1.0f;
-			if (ImGui::DragFloat("Scale Light", &scale_light, 0.1f)) {
-				SubmitTransform(active_light, renderer, scale_light, scale_light, scale_light, "scale", "object");
-				scale_x = scale_light;
-				scale_y = scale_light;
-				scale_z = scale_light;
+			if (ImGui::DragFloat("Scale Light", &active_light->scale.x, 0.1f)) {
+				SubmitTransform(active_light, renderer, active_light->scale.x, active_light->scale.x, active_light->scale.x, "scale", "object");
+				active_light->scale.y = active_light->scale.x;
+				active_light->scale.z = active_light->scale.x;
 			}
 
-			static float  translate_light_x = 0.0f, translate_light_y = 0.0f, translate_light_z = 0.0f;
-			if (ImGui::DragFloat("translate x", &translate_light_x, 0.05f) ||
-				ImGui::DragFloat("translate y", &translate_light_y, 0.05f) ||
-				ImGui::DragFloat("translate z", &translate_light_z, 0.05f))
-				SubmitTransform(active_light, renderer, translate_light_x, translate_light_y, translate_light_z, "translate", "object");
+			static float   translate_light_y = 0.0f, translate_light_z = 0.0f;
+			if (ImGui::DragFloat("translate x light", &active_light->translate.x, 0.5f) ||
+				ImGui::DragFloat("translate y light", &active_light->translate.y, 0.5f) ||
+				ImGui::DragFloat("translate z light", &active_light->translate.z, 0.5f))
+				SubmitTransform(active_light, renderer, active_light->translate.x, active_light->translate.y, active_light->translate.z, "translate", "object");
 
 			//rotate model around axis
 			static float light_xrotate = 0.0f, light_yrotate = 0.0f, light_zrotate = 0.0f;
-			if (ImGui::DragFloat("rotate around x", &light_xrotate, 0.5f) ||
-				ImGui::DragFloat("rotate around y", &light_yrotate, 0.5f) ||
-				ImGui::DragFloat("rotate around z", &light_zrotate, 0.5f))
+			if (ImGui::DragFloat("rotate around x light", &active_light->rotate.x, 0.5f) ||
+				ImGui::DragFloat("rotate around y light", &active_light->rotate.y, 0.5f) ||
+				ImGui::DragFloat("rotate around z light", &active_light->rotate.z, 0.5f))
 			{
-				if (light_xrotate >= 180 || light_xrotate <= -180) light_xrotate = 0;
-				if (light_yrotate >= 360 || light_yrotate <= -360) light_yrotate = 0;
-				if (light_zrotate >= 180 || light_zrotate <= -180) light_zrotate = 0;
-				SubmitTransform(active_light, renderer, light_xrotate, light_yrotate, light_zrotate, "rotate", "object");
+				if (active_light->rotate.x >= 180 || active_light->rotate.x <= -180) light_xrotate = 0;
+				if (active_light->rotate.y >= 360 || active_light->rotate.y <= -360) light_yrotate = 0;
+				if (active_light->rotate.z >= 180 || active_light->rotate.z <= -180) light_zrotate = 0;
+				SubmitTransform(active_light, renderer, active_light->rotate.x, active_light->rotate.y, active_light->rotate.z, "rotate", "object");
 			}
+
+		/*	if (active_light->source == "ambient")
+			{
+				count_ambient++;
+				static float ambient_vault = 0.0f;
+				ImGui::SliderFloat("Ambient Vault", &active_light->vault_ambient, 0.0f, 1.0f);
+			}*/
 		}
 	}
 
@@ -227,7 +301,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 		//Near, Far and Ratio Slide Bar
-		static float _near = 1.0f, _far = 1.0f, _ratio = 1.0f;
+		static float _near = 10.0f, _far = 100.0f, _ratio = 1.0f;
 		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
 			camera->zNear = _near;
 			camera->byTopBttm = false;
@@ -306,12 +380,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				camera->fovy = fovy;
 				camera->byTopBttm = false;
 			}
+			scene.isPerspective = true;
 			camera->SetPerspectiveProjection();
 		}
 		else
 		{
 			//Height Slide Bar
 			static float height = 2.5f;
+			scene.isPerspective = false;
 			if (ImGui::SliderFloat("Height", &height, 0.0f, 250.0f))
 			{
 				camera->height = height;
@@ -354,7 +430,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 		//Focus Slide Bar
-		static bool focus = 0;
+		static bool focus = false;
 		ImGui::Checkbox("Focus", &focus);
 		if (focus) {
 			camera->SetFocus(*(scene.GetModel(scene.GetActiveModelIndex())));
@@ -442,25 +518,25 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		if (ImGui::ColorEdit3("Model Color", (float*)&mColor))
 			model->SetColor(mColor);
 
-		static float scale_model = 1.0f; 
-		if (ImGui::DragFloat("Scale model", &scale_model, 0.1f)) {
-			SubmitTransform(model, renderer, scale_model, scale_model, scale_model, "scale", "object");
-			scale_x = scale_model;
-			scale_y = scale_model;
-			scale_z = scale_model;
+		//static float scale_model = 1.0f; 
+		if (ImGui::DragFloat("Scale model", &model->scale_model, 0.1f)) {
+			SubmitTransform(model, renderer, model->scale_model, model->scale_model, model->scale_model, "scale", "object");
+			model->scale.x = model->scale_model;
+			model->scale.y = model->scale_model;
+			model->scale.z = model->scale_model;
 		}
 
 		//	static float  scale_x = 0.0f, scale_y = 0.0f, scale_z = 0.0f;
-		if (ImGui::DragFloat("scale x", &scale_x, 0.05f) ||
-			ImGui::DragFloat("scale y", &scale_y, 0.05f) ||
-			ImGui::DragFloat("scale z", &scale_z, 0.05f))
-			SubmitTransform(model, renderer, scale_x, scale_y, scale_z, "scale", "object");
+		if (ImGui::DragFloat("scale x", &model->scale.x, 0.05f) ||
+			ImGui::DragFloat("scale y", &model->scale.y, 0.05f) ||
+			ImGui::DragFloat("scale z", &model->scale.z, 0.05f))
+			SubmitTransform(model, renderer, model->scale.x, model->scale.y, model->scale.z, "scale", "object");
 
 		static float  translate_x = 0.0f, translate_y = 0.0f, translate_z = 0.0f;
-		if (ImGui::DragFloat("translate x", &translate_x, 0.05f) ||
-			ImGui::DragFloat("translate y", &translate_y, 0.05f) ||
-			ImGui::DragFloat("translate z", &translate_z, 0.05f))
-			SubmitTransform(model, renderer, translate_x, translate_y, translate_z, "translate", "object");
+		if (ImGui::DragFloat("translate x", &model->translate.x, 0.5f) ||
+			ImGui::DragFloat("translate y", &model->translate.y, 0.5f) ||
+			ImGui::DragFloat("translate z", &model->translate.z, 0.5f))
+			SubmitTransform(model, renderer, model->translate.x, model->translate.y, model->translate.z, "translate", "object");
 
 		//rotate model around axis
 		static float xrotate = 0.0f, yrotate = 0.0f, zrotate = 0.0f;
@@ -474,10 +550,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			SubmitTransform(model, renderer, xrotate, yrotate, zrotate, "rotate", "object");
 		}
 
-
 		ImGui::SliderFloat("Diffuse", &model->diffuse, 0.0f, 1.0f);
 
 		ImGui::SliderFloat("Specular", &model->specular, 0.0f, 1.0f);
+		ImGui::DragInt("Specular exponent", &model->exponent, 1);
 
 		ImGui::SliderFloat("Ambient", &model->ambient, 0.0f, 1.0f);
 
@@ -505,7 +581,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			static int normals_mode = 0;
 			if (ImGui::RadioButton("Vertex", normals_mode == Vertex)) { normals_mode = Vertex; } ImGui::SameLine();
 			if (ImGui::RadioButton("Face", normals_mode == Face)) { normals_mode = Face; }
-			ImGui::SliderFloat("Normals size", &normal_size, 0.00f, 3.0f);
+			ImGui::SliderFloat("Normals size", &normal_size, 0.00f, 50.0f);
 
 			if (normals_mode == Vertex) 
 				scene.SetDrawNormals(true, "vertex", normal_size);
@@ -552,10 +628,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 					nfdchar_t *outPath = NULL;
 					nfdresult_t result = NFD_OpenDialog("obj;png,jpg", NULL, &outPath);
 					if (result == NFD_OKAY) {
-						MeshModel addM = Utils::LoadMeshModel(outPath);
-						scene.AddModel(std::make_shared<MeshModel>(addM));
+						std::shared_ptr<MeshModel> addM = std::make_shared<MeshModel>(Utils::LoadMeshModel(outPath));
+						addM->SetColor(glm::vec3(1));
+						scene.AddModel(addM);
 						scene.SetActiveModelIndex(scene.GetModelCount() - 1);
-						(scene.GetModel(scene.GetActiveModelIndex()))->SetColor(colors[rand() % 6]);
+						//(scene.GetModel(scene.GetActiveModelIndex()))->SetColor(colors[rand() % 6]);
 						free(outPath);
 					}
 					else if (result == NFD_CANCEL) {

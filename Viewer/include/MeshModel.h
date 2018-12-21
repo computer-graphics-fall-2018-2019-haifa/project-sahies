@@ -5,6 +5,7 @@
 #include "Face.h"
 #include "map"
 
+
 /*
  * MeshModel class.
  * This class represents a mesh model (with faces and normals informations).
@@ -19,7 +20,7 @@ private:
 	std::string transformName;
 	
 	std::map<std::string, glm::vec3> cube;
-	std::vector<glm::vec3> newVertices;
+	
 	std::vector<glm::vec3> newNormalVertices;
 
 protected:
@@ -27,7 +28,6 @@ protected:
 	glm::mat4x4 objectTransform;
 	std::vector<glm::mat4> matWorldTransformations;
 	std::vector<glm::vec3> vertices;
-	glm::vec3 color = glm::vec3(0);
 	std::vector<Face> faces;
 
 
@@ -39,12 +39,19 @@ public:
 	glm::vec3 rotate;
 	glm::vec3 scale;
 	std::vector<glm::vec3> cordinatesTransformations;
+	std::vector<glm::vec3> newVerticesRender;
+	std::vector<glm::vec3> newVertices;
+	float scale_model = 1.0f;
+	glm::vec3 color = glm::vec3(0);
 
 	std::vector<glm::mat4> matTransformations;
 	std::string type;
-	float ambient;
-	float specular;
-	float diffuse;
+	float ambient = 0.0f;
+	float specular = 0.0f;
+	float diffuse = 0.2f;
+	int exponent = 1.0f;
+	glm::mat4 model_transform_without_projection = glm::mat4(1);
+	glm::mat4 model_transform = glm::mat4(1);
 
 	static glm::vec3 findMax(const std::vector<glm::vec3>& vertices);
 	static glm::vec3 findMin(const std::vector<glm::vec3>& vertices);
@@ -74,6 +81,7 @@ public:
 	 void MeshModel::SetNewVertices(std::vector<glm::vec3>& vertices, std::vector<glm::vec3>& n_vertices);
 	 std::vector<glm::vec3> GetNewVertices();
 	 std::vector<glm::vec3> GetNewNormalVertices();
+	 void UpdateChangesModel(glm::mat4 projection,glm::mat4 view_transform, glm::mat4 worldTransformation);
 	
 	// Add more methods/functionality as needed...
 };
