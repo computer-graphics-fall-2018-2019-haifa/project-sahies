@@ -54,9 +54,9 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 {
 	glm::mat4 mat, matX, matY, matZ;
 	const float pi = 3.14159265;
-	float thetaX = pi / 180 * cordinates.x;
-	float thetaY = pi / 180 * cordinates.y;
-	float thetaZ = pi / 180 * cordinates.z;
+	float thetaX = (pi / 180) * cordinates.x;
+	float thetaY = (pi / 180) * cordinates.y;
+	float thetaZ = (pi / 180) * cordinates.z;
 
 	if (transformation == "scale")
 		mat = {
@@ -73,25 +73,25 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 			0, 0, 1.0f, cordinates.z,
 			0, 0, 0, 1.0f
 		};
-		//mat = glm::transpose(mat);
+		mat = glm::transpose(mat);
 	}
 
 	else if (transformation == "rotate") {
 		matX = {
 			1 ,0 ,0 ,0,
-			0, cos(thetaX), -sin(thetaX), 0,
-			0, sin(thetaX), cos(thetaX), 0,
+			0, glm::cos(thetaX), -1* glm::sin(thetaX), 0,
+			0, glm::sin(thetaX), glm::cos(thetaX), 0,
 			0, 0,0, 1
 		};
 		matY = glm::mat4(
-			cos(thetaY), 0, sin(thetaY), 0,
+			glm::cos(thetaY), 0, glm::sin(thetaY), 0,
 			0, 1, 0, 0,
-			-sin(thetaY), 0, cos(thetaY), 0,
+			-1* glm::sin(thetaY), 0, glm::cos(thetaY), 0,
 			0, 0, 0, 1
 		);
 		matZ = glm::mat4(
-			cos(thetaZ), -sin(thetaZ), 0, 0,
-			sin(thetaZ), cos(thetaZ), 0, 0,
+			glm::cos(thetaZ), -1* glm::sin(thetaZ), 0, 0,
+			glm::sin(thetaZ), glm::cos(thetaZ), 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		);
@@ -109,8 +109,8 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 
 
 
-	return glm::transpose(mat);
-	//return mat;
+	return mat;
+	//return transpose(mat);
 }
 
 
@@ -176,6 +176,24 @@ glm::mat4 Utils::GetMatrix(std::string transformation, glm::vec3 cordinates)
 	return glm::transpose(mat);
 	//return mat;
 }
+
+
+ glm::vec3 Utils::FaceToVertexIndex(Face& face) {
+	 int a = face.GetVertexIndex(0) - 1;
+	 int b = face.GetVertexIndex(1) - 1;
+	 int c = face.GetVertexIndex(2) - 1;
+	 return glm::vec3(a, b, c);
+ }
+
+ glm::vec3 Utils::FaceToNormalIndex(Face& face) {
+	 int a = face.GetNormalIndex(0) - 1;
+	 int b = face.GetNormalIndex(1) - 1;
+	 int c = face.GetNormalIndex(2) - 1;
+	 return glm::vec3(a, b, c);
+ }
+
+
+
 
 
 MeshModel Utils::LoadMeshModel(const std::string& filePath)
@@ -262,4 +280,92 @@ std::string Utils::GetFileName(const std::string& filePath)
 	}
 
 	return filePath.substr(index + 1, len - index);
+}
+
+
+
+std::vector<glm::vec3> Utils::CalcNormals(std::vector<glm::vec3>& vertices, std::vector<Face>& faces)
+{
+	std::vector<glm::vec3> normals(vertices.size());
+	std::vector<int> near_faces(vertices.size());
+
+	for (auto n_a : near_faces)
+		n_a = 0;
+
+	for (Face face : faces)
+	{
+		glm::vec3 v = Utils::FaceToVertexIndex(face);
+		glm::vec3 u = vertices[v.x] - vertices[v.y];
+		glm::vec3 m = vertices[v.z] - vertices[v.y];
+		glm::vec3 face_normal = glm::normalize(-glm::cross(u, m));
+
+		normals[v.x] += face_normal;
+		normals[v.y] += face_normal;
+		normals[v.z] += face_normal;
+
+		near_faces[v.x] += 1;
+		near_faces[v.y] += 1;
+		near_faces[v.z] += 1;
+
+	}
+
+	for (int i = 0; i < normals.size(); i++)
+	{
+		normals[i] /= near_faces[i];
+		normals[i] = glm::normalize(normals[i]);
+	}
+
+	return normals;
+}
+
+
+
+std::vector<glm::vec3> Utils::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix)
+{
+	std::vector<glm::vec3> new_vertices3d = Utils::Vec4to3(Utils::Vec3to4Xmat(vertices, matrix));
+	return new_vertices3d;
+}
+
+
+std::vector<glm::vec3> Utils::CalcNorm(Face& face, std::vector<glm::vec3>& normals, std::vector<glm::vec3>&  vertices, std::string draw_genre, float size_normal, float viewportWidth, float viewportHeight)
+{
+	int x_center = viewportWidth / 2;
+	int y_center = viewportHeight / 2;
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
+
+	int a = face.GetVertexIndex(0) - 1;
+	int b = face.GetVertexIndex(1) - 1;
+	int c = face.GetVertexIndex(2) - 1;
+
+	int a_n = face.GetNormalIndex(0) - 1;
+	int b_n = face.GetNormalIndex(1) - 1;
+	int c_n = face.GetNormalIndex(2) - 1;
+
+
+
+	if (draw_genre == "face") {
+
+		glm::vec3 point = (vertices[a] + vertices[b] + vertices[c]) / glm::vec3(3),
+			normal = glm::cross(vertices[b] - vertices[a], vertices[c] - vertices[a]),
+			end = point + normal * size_normal;
+
+		return { point, normal, end };
+	}
+	else
+	{
+		glm::vec3 a_end = glm::vec3(vertices[a].x + size_normal * normals[a_n].x, vertices[a].y + size_normal * normals[a_n].y, vertices[a].z + size_normal * normals[a_n].z),
+				  b_end = glm::vec3(vertices[b].x + size_normal * normals[b_n].x, vertices[b].y + size_normal * normals[b_n].y, vertices[b].z + size_normal * normals[b_n].z),
+				  c_end = glm::vec3(vertices[c].x + size_normal * normals[c_n].x, vertices[c].y + size_normal * normals[c_n].y, vertices[c].z + size_normal * normals[c_n].z);
+
+
+		a_end += center_shift;
+		b_end += center_shift;
+		c_end += center_shift;
+
+		std::vector<glm::vec3> start = { vertices[a] + center_shift ,vertices[b] + center_shift ,vertices[c] + center_shift };
+
+		return { start[0] - a_end , start[1] - b_end , start[2] - c_end };
+
+
+	}
 }

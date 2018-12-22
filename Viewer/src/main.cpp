@@ -56,7 +56,6 @@ int main(int argc, char **argv)
 
 	// Register a mouse scroll-wheel callback
 	glfwSetScrollCallback(window, ScrollCallback);
-
 	// This is the main game loop..
     while (!glfwWindowShouldClose(window))
     {
@@ -134,7 +133,7 @@ void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& 
 	glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
 
 	// Resize handling here... (a suggestion)
-
+	glViewport(0, 0, frameBufferWidth, frameBufferHeight);
 	// Clear the frame buffer
 	renderer.ClearColorBuffer(GetClearColor());
 
