@@ -277,6 +277,8 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 	//std::vector<glm::vec3> norms = FromNormalToTriangle(face,n);
 
 	normal = face_normal[1];
+	glm::vec3 normalized_normal = glm::normalize(normal); 
+	float d = -glm::dot(vertices[0], normalized_normal);
 	/*normal = norms[0] + norms[1] + norms[2] / glm::vec3(3);*/
 	//normal = vertices_normal[0] + vertices_normal[1] + vertices_normal[2] / glm::vec3(3);
 	//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
@@ -308,35 +310,48 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 					//normal = normals[0] + normals[1] + normals[2] /*/ glm::vec3(3)*/ ;
 					//normal = normals[0] + normals[1] + normals[2];
 					//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
+
 				point = glm::vec3(x_reciprocal, y_reciprocal, z_reciprocal);
-				//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
+				
+
+				float z = -(normalized_normal.x * x + normalized_normal.y *y + d) / normalized_normal.z;
 
 				if ("phong" == draw_style)
-					{
-					
+				{
+					point = model->GetObjectTransformation() * glm::vec4(x, y, z, 1);
+					float divide = (vertices[1].y - vertices[2].y) * (vertices[0].x - vertices[2].x) + (vertices[2].x - vertices[1].x) * (vertices[0].y - vertices[2].y);
+					float d0 = (vertices[1].y - vertices[2].y) * (point.x - vertices[2].x) + (vertices[2].x - vertices[1].x) * (point.y - vertices[2].y);
+					float d1 = (vertices[2].y - vertices[0].y) * (point.x - vertices[2].x) + (vertices[0].x - vertices[2].x) * (point.y - vertices[2].y);
+					d0 /= divide;
+					d1 /= divide;
+					float d2 = 1 - d0 - d1;
+					normal = glm::vec4(glm::vec3(d0) * face_normal[0] + glm::vec3(d1) * face_normal[1] + glm::vec3(d2) * face_normal[2], 1);
+
+
+
 						//normal = lambda1 * (vertices_normal[0]) + lambda2 * (vertices_normal[1]) + lambda3 * (vertices_normal[2]);
 						//point = lambda1 * vertices[0] + lambda2 * vertices[1] + lambda3 * vertices[2];
-					}
+				}
 				if ("gouraud" == draw_style)
 						normal = lambda1 * (vertices_normal[0]) + lambda2 * (vertices_normal[1]) + lambda3 *  (vertices_normal[2]);
 
-					glm::vec3 ilum_color(0);
-					if (lights.size() > 0)
+				glm::vec3 ilum_color(0);
+				if (lights.size() > 0)
+				{
+					for (auto light : lights)
 					{
-						for (auto light : lights)
+						if (light->source == "ambient")
 						{
-							if (light->source == "ambient")
-							{
-								ilum_color += model->ambient * light->color;
-								continue;
-							}
-
-							ilum_color += light->SetIlum(point, normal, gl_eye, draw_style, model);
-
-							if (fog)
-								putPixel(x, y, light->setFog(fog_color, 1 / z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal);
+							ilum_color += model->ambient * light->color;
+							continue;
 						}
+
+						ilum_color += light->SetIlum(point, normal, gl_eye, draw_style, model);
+
+						if (fog)
+							putPixel(x, y, light->setFog(fog_color, 1 / z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal);
 					}
+				}
 
 					//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
