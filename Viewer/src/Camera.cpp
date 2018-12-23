@@ -18,8 +18,8 @@ Camera::Camera( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up, MeshModel& model
 	this->right = 1;
 	this->bottom = -1;
 	this->top = 1;
-	this->zNear = 10;
-	this->zFar = 100;
+	this->zNear = 1;
+	this->zFar = 10;
 	this->fovy = 26;
 	this->aspect = 1280.0f/720.0f;
 	this->height = 1;

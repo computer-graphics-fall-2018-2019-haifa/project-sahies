@@ -301,7 +301,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 		//Near, Far and Ratio Slide Bar
-		static float _near = 10.0f, _far = 100.0f, _ratio = 1.0f;
+		static float _near = 1.0f, _far = 10.0f, _ratio = 1.0f;
 		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
 			camera->zNear = _near;
 			camera->byTopBttm = false;

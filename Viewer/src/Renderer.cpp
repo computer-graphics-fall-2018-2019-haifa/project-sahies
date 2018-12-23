@@ -224,7 +224,7 @@ void Renderer::Render(Scene& scene)
 				//DrawTriangle(FromVecToTriangle(face, model->newVerticesRender), model->GetColor());
 				FillTriangle(face, model->newVertices/*Render*/, model->GetNormals()/* model->GetNewNormalVertices()*/, scene.lights, model, scene.draw_style);
 				if (scene.toDrawNormals)
-					DrawNormals(face, model->GetNormals(), model->newVerticesRender, model->GetVertices(), scene.draw_genre, scene.normal_size, true);
+					DrawNormals(face, model->GetNormals(), model->newVertices/*Render*/, model->GetVertices(), scene.draw_genre, scene.normal_size, true);
 			}
 		}
 	}
@@ -299,7 +299,7 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 				float x_reciprocal = lambda1 * (1 / vertices[0].x) + lambda2 * (1 / vertices[1].x) + lambda3 * (1 / vertices[2].x);
 				float y_reciprocal = lambda1 * (1 / vertices[0].y) + lambda2 * (1 / vertices[1].y) + lambda3 * (1 / vertices[2].y);
 
-				if (isPerspective) {
+				if (!isPerspective) {
 					 z_reciprocal = lambda1 * (vertices[0].z) + lambda2 * (vertices[1].z) + lambda3 * (vertices[2].z);
 					 x_reciprocal = lambda1 * (vertices[0].x) + lambda2 * (vertices[1].x) + lambda3 * (vertices[2].x);
 					 y_reciprocal = lambda1 * (vertices[0].y) + lambda2 * (vertices[1].y) + lambda3 * (vertices[2].y);
@@ -311,45 +311,85 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 				point = glm::vec3(x_reciprocal, y_reciprocal, z_reciprocal);
 				//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
 
+				/*glm::vec3 normalized_normal = glm::normalize(normal);
+				float d = -glm::dot(vertices[0], normalized_normal);
+				float z = -(normalized_normal.x * x + normalized_normal.y *y + d) / normalized_normal.z;*/
+				glm::vec3 ilum_color(0);
 				if ("phong" == draw_style)
 					{
-					
-						//normal = lambda1 * (vertices_normal[0]) + lambda2 * (vertices_normal[1]) + lambda3 * (vertices_normal[2]);
-						//point = lambda1 * vertices[0] + lambda2 * vertices[1] + lambda3 * vertices[2];
+
+					std::vector<glm::vec3> colorPhong;
+					std::vector<float> lam = { lambda1,lambda2 ,lambda3 };
+					if (lights.size() > 0)
+					{
+						for (int i = 0; i < 3; i++)
+						{
+							for (auto light : lights)
+							{
+								if (light->source == "ambient")
+								{
+									ilum_color += model->ambient * light->color;
+									continue;
+								}
+
+								colorPhong.push_back(lam[i] * light->SetIlum(/*vertices[i]*/ point, vertices_normal[i], gl_eye, draw_style, model));
+
+							/*	if (fog)
+									putPixel(x, y, light->setFog(fog_color,reflect_color 1 / z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal); */
+							}
+						}
 					}
+						if (!fog)
+						{
+
+							glm::vec3 fcolor = colorPhong[0] + colorPhong[1] + colorPhong[2];
+							float r = glm::min(fcolor.x * model->color.x, 1.0f);
+							float g = glm::min(fcolor.y * model->color.y, 1.0f);
+							float b = glm::min(fcolor.z * model->color.z, 1.0f);
+
+							putPixel(x, y, glm::vec3(r, g, b), 1 / z_reciprocal);
+						}
+						continue;
+						
+					}
+
 				if ("gouraud" == draw_style)
 						normal = lambda1 * (vertices_normal[0]) + lambda2 * (vertices_normal[1]) + lambda3 *  (vertices_normal[2]);
 
-					glm::vec3 ilum_color(0);
+					glm::vec3 ambient(0);
 					if (lights.size() > 0)
 					{
 						for (auto light : lights)
 						{
 							if (light->source == "ambient")
 							{
-								ilum_color += model->ambient * light->color;
+								ambient = model->ambient * light->color;
 								continue;
 							}
 
 							ilum_color += light->SetIlum(point, normal, gl_eye, draw_style, model);
 
-							if (fog)
-								putPixel(x, y, light->setFog(fog_color, 1 / z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal);
+						}
+						ilum_color += ambient;
+
+
+						if (!fog)
+						{
+
+
+							float r = glm::min(ilum_color.x * model->color.x, 1.0f);
+							float g = glm::min(ilum_color.y * model->color.y, 1.0f);
+							float b = glm::min(ilum_color.z * model->color.z, 1.0f);
+
+							putPixel(x, y, glm::vec3(r, g, b), 1 / z_reciprocal);
+						}
+						else
+						{
+							putPixel(x, y, Light::setFog(ilum_color, fog_color, /*1 /*/ z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal);
 						}
 					}
 
-					//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-					if (!fog)
-					{
-
-
-						float r = glm::min(ilum_color.x * model->color.x, 1.0f);
-						float g = glm::min(ilum_color.y * model->color.y, 1.0f);
-						float b = glm::min(ilum_color.z * model->color.z, 1.0f);
-
-						putPixel(x, y, glm::vec3(r, g, b), 1 / z_reciprocal);
-					}
+				
 					//putPixel(x, y, ilum_color * mColor,  z_reciprocal); 
 			}
 		}

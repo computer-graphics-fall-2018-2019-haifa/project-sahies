@@ -22,7 +22,6 @@ public:
 	glm::vec3 Light::CenterShift(glm::vec3 vec);
 	glm::mat4 transformations;
 	glm::vec3 light_point;
-	glm::vec3 ilum_color;
 	std::string source;
-	glm::vec3 Light::setFog(glm::vec3 fog_color, float z, float z_near, float z_far);
+	static glm::vec3 Light::setFog(glm::vec3 reflect_color,glm::vec3 fog_color, float z, float z_near, float z_far);
 };
