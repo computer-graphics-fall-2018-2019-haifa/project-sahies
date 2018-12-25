@@ -103,16 +103,19 @@ Renderer::~Renderer()
 }
 
 
-void Renderer::putPixel(int i, int j, const glm::vec3& color, float z)
+void Renderer::putPixel(int i, int j, const glm::vec3& color, float z, bool t)
 {
-	if (i < 0) return; if (i >= viewportWidth) return;
-	if (j < 0) return; if (j >= viewportHeight) return;
-	if (z < zBuffer[Z_INDEX(viewportWidth, i, j)])
+	int w = GetActiveViewportWidth();
+	int h = GetActiveViewportHeight();
+	if (i < 0) return; if (i >= w) return;
+	if (j < 0) return; if (j >= h) return;
+	if (!t || z < zBuffer[Z_INDEX(w, i, j)])
+	
 	{
-		colorBuffer[INDEX(viewportWidth, i, j, 0)] = color.x;
-		colorBuffer[INDEX(viewportWidth, i, j, 1)] = color.y;
-		colorBuffer[INDEX(viewportWidth, i, j, 2)] = color.z;
-		zBuffer[Z_INDEX(viewportWidth, i, j)] = z;
+		colorBuffer[INDEX(w, i, j, 0)] = color.x;
+		colorBuffer[INDEX(w, i, j, 1)] = color.y;
+		colorBuffer[INDEX(w, i, j, 2)] = color.z;
+		zBuffer[Z_INDEX(w, i, j)] = z;
 	}
 }
 
@@ -130,19 +133,31 @@ void Renderer::createBuffers(int viewportWidth, int viewportHeight)
 	{
 		for (int y = 0; y < viewportHeight; y++)
 		{
-			putPixel(x, y, glm::vec3(0.0f, 0.0f, 0.0f), 1.1);
+			putPixel(x, y, glm::vec3(0.0f, 0.0f, 0.0f), INFINITE);
 		}
 	}
 }
 
+int Renderer::GetActiveViewportWidth()
+{
+	return alias ? aliasViewportWidth : viewportWidth;
+}
+
+int Renderer::GetActiveViewportHeight()
+{
+	return alias ? aliasViewportHeight : viewportHeight;
+}
+
 void Renderer::ClearColorBuffer(const glm::vec3& color)
 {
-	for (int i = 0; i < viewportWidth; i++)
+	int w = GetActiveViewportWidth();
+	int h = GetActiveViewportHeight();
+	for (int i = 0; i < w; i++)
 	{
-		for (int j = 0; j < viewportHeight; j++)
+		for (int j = 0; j < h; j++)
 		{
-			putPixel(i, j, color, 1.1);
-			zBuffer[Z_INDEX(viewportWidth, i, j)] = INFINITE;
+			putPixel(i, j, color, INFINITE - 1, false);
+			zBuffer[Z_INDEX(w, i, j)] = INFINITE -1;
 
 		}
 	}
@@ -155,8 +170,18 @@ void Renderer::SetViewport(int viewportWidth, int viewportHeight, int viewportX,
 	this->viewportY = viewportY;
 	this->viewportWidth = viewportWidth;
 	this->viewportHeight = viewportHeight;
-	createBuffers(viewportWidth, viewportHeight);
+
+	if (alias) {
+		this->aliasViewportWidth = this->viewportWidth * 2;
+		this->aliasViewportHeight = this->viewportHeight * 2;
+		createBuffers(this->aliasViewportWidth, this->aliasViewportHeight);
+	}
+	else 
+	{
+		createBuffers(this->viewportWidth, this->viewportHeight);
+	}
 	createOpenGLBuffer();
+
 }
 
 void Renderer::SetTransformation(MeshModel& model, std::string genreTransformation)
@@ -176,6 +201,11 @@ glm::vec3 Renderer::VertexXmat(glm::vec3 vertex, glm::mat4 matrix)
 }
 
 
+void Renderer::SetViewPort()
+{
+	SetViewport(this->viewportWidth, this->viewportHeight);
+}
+
 void Renderer::Render(Scene& scene)
 {
 	std::shared_ptr<Camera> active_camera = scene.GetCamera(scene.GetActiveCameraIndex());
@@ -192,6 +222,8 @@ void Renderer::Render(Scene& scene)
 		for (auto light : scene.lights)
 		{
 			light->UpdateChangesModel(active_camera->GetProjection(), glm::inverse(active_camera->GetViewTransformation()), active_camera->GetWorldTransformation());
+			if (light->source == "parallel")
+				continue;
 			for (auto face : light->GetFaces())
 				FillLight(FromVecToTriangle(face, light->GetNewVertices()), light->GetColor(), light->light_power);
 		}
@@ -202,7 +234,7 @@ void Renderer::Render(Scene& scene)
 	{
 
 		active_camera->UpdateChangesModel(active_camera->GetProjection(), glm::inverse(active_camera->GetViewTransformation()), active_camera->GetWorldTransformation());
-		DrawAxes(1000, active_camera->GetProjection() *  glm::inverse(active_camera->GetViewTransformation()));
+		DrawAxes(1000, /*active_camera->GetProjection() **/  glm::inverse(active_camera->GetViewTransformation()));
 
 		for (auto model : scene.GetModels()) {
 			if (active_camera->GetModelName() == model->GetModelName()) {
@@ -211,8 +243,8 @@ void Renderer::Render(Scene& scene)
 			}
 			else 
 			{
-				//DrawAxes(1000,model->model_transform_without_projection);
 				model->UpdateChangesModel(active_camera->GetProjection(), glm::inverse(active_camera->GetViewTransformation()), active_camera->GetWorldTransformation());
+				//DrawAxes(5000, model->model_transform_without_projection);
 				if (scene.toDrawBox) {
 					model->CreateCube(std::vector<glm::vec3>(model->GetVertices()), viewportWidth / 2, viewportHeight / 2, model->model_transform_without_projection);
 					DrawCube(model);
@@ -222,9 +254,9 @@ void Renderer::Render(Scene& scene)
 
 			for (auto face : model->GetFaces()) {
 				//DrawTriangle(FromVecToTriangle(face, model->newVerticesRender), model->GetColor());
-				FillTriangle(face, model->newVertices/*Render*/, model->GetNormals()/* model->GetNewNormalVertices()*/, scene.lights, model, scene.draw_style);
+				FillTriangle(face, model->newVerticesRender, model->GetNormals()/* model->GetNewNormalVertices()*/, scene.lights, model, scene.draw_style);
 				if (scene.toDrawNormals)
-					DrawNormals(face, model->GetNormals(), model->newVertices/*Render*/, model->GetVertices(), scene.draw_genre, scene.normal_size, true);
+					DrawNormals(face, model->GetNormals(), model->newVerticesRender, model->GetVertices(), scene.draw_genre, scene.normal_size, true);
 			}
 		}
 	}
@@ -269,17 +301,13 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 	glm::vec3 min = MeshModel::findMin(vertices);
 	glm::vec3 max = MeshModel::findMax(vertices);
 
-	std::vector<glm::vec3> face_normal = Utils::CalcNorm(face, normals, all_vertices, "face", 0.5, viewportWidth ,viewportHeight); // {point, normal, end}
-	std::vector<glm::vec3>  vertices_normal = Utils::CalcNorm(face, normals, all_vertices, "vertex", 0.5, viewportWidth, viewportHeight); // TODO a problem!!!!! normals <=> all_vertices
+	std::vector<glm::vec3> face_normal = Utils::CalcNorm(face, normals, all_vertices, "face", 0.5, GetActiveViewportWidth() , GetActiveViewportHeight(), z_center); // {point, normal, end}
+	std::vector<glm::vec3>  vertices_normal = Utils::CalcNorm(face, normals, all_vertices, "vertex", 1, GetActiveViewportWidth(), GetActiveViewportHeight(), z_center); // TODO a problem!!!!! normals <=> all_vertices
 	glm::vec3 point(0), normal(0);
 
-
-	//std::vector<glm::vec3> norms = FromNormalToTriangle(face,n);
-
+	//flat normal
 	normal = face_normal[1];
-	/*normal = norms[0] + norms[1] + norms[2] / glm::vec3(3);*/
-	//normal = vertices_normal[0] + vertices_normal[1] + vertices_normal[2] / glm::vec3(3);
-	//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
+
 
 	for (int x = min.x; x <= max.x; x++)
 	{
@@ -315,8 +343,12 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 				float d = -glm::dot(vertices[0], normalized_normal);
 				float z = -(normalized_normal.x * x + normalized_normal.y *y + d) / normalized_normal.z;*/
 				glm::vec3 ilum_color(0);
+				glm::vec3 phongColor(0);
+				if ("gouraud" == draw_style)
+						normal = lambda1 * (vertices_normal[0]) + lambda2 * (vertices_normal[1]) + lambda3 *  (vertices_normal[2]);
+
 				if ("phong" == draw_style)
-					{
+				{
 
 					std::vector<glm::vec3> colorPhong;
 					std::vector<float> lam = { lambda1,lambda2 ,lambda3 };
@@ -332,31 +364,34 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 									continue;
 								}
 
-								colorPhong.push_back(lam[i] * light->SetIlum(/*vertices[i]*/ point, vertices_normal[i], gl_eye, draw_style, model));
-
-							/*	if (fog)
-									putPixel(x, y, light->setFog(fog_color,reflect_color 1 / z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal); */
+								colorPhong.push_back(lam[i] * light->SetIlum(vertices[i] /*point*/, vertices_normal[i], gl_eye, draw_style, model));
 							}
 						}
+						phongColor = colorPhong[0] + colorPhong[1] + colorPhong[2];
 					}
-						if (!fog)
-						{
+				
 
-							glm::vec3 fcolor = colorPhong[0] + colorPhong[1] + colorPhong[2];
-							float r = glm::min(fcolor.x * model->color.x, 1.0f);
-							float g = glm::min(fcolor.y * model->color.y, 1.0f);
-							float b = glm::min(fcolor.z * model->color.z, 1.0f);
-
-							putPixel(x, y, glm::vec3(r, g, b), 1 / z_reciprocal);
-						}
-						continue;
-						
-					}
-
-				if ("gouraud" == draw_style)
-						normal = lambda1 * (vertices_normal[0]) + lambda2 * (vertices_normal[1]) + lambda3 *  (vertices_normal[2]);
+				}
 
 					glm::vec3 ambient(0);
+					/*glm::vec3 g = glm::vec3(1, 0, 0);
+					std::vector<glm::vec3> platte_color = {g};
+					for (float i=0; i<1;i+0.1)
+					{
+						g.z += i;
+						g.x -= i;
+						platte_color.push_back(g);
+					}*/
+					glm::vec3 final_color = model->color;
+
+					if (model->marble) 
+						if (model->uni_type == 0)
+							final_color *= glm::mix(model->color1, model->color2, lambda1*lambda1 /*glm::clamp(glm::vec3(lambda1, 0.0f, 1.0f), 0.0f, 1.0f))*/);
+						else if (model->uni_type == 1)
+							final_color *= glm::mix(model->color1, model->color2, lambda1*lambda1 + lambda2 * lambda2 + lambda3 * lambda3);
+						else 
+							final_color *= glm::vec3(static_cast <float> (rand()) / static_cast <float> (RAND_MAX), static_cast <float> (rand()) / static_cast <float> (RAND_MAX), static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+					
 					if (lights.size() > 0)
 					{
 						for (auto light : lights)
@@ -372,25 +407,22 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 						}
 						ilum_color += ambient;
 
+						if ("phong" == draw_style)
+							ilum_color = phongColor;
 
 						if (!fog)
 						{
 
 
-							float r = glm::min(ilum_color.x * model->color.x, 1.0f);
-							float g = glm::min(ilum_color.y * model->color.y, 1.0f);
-							float b = glm::min(ilum_color.z * model->color.z, 1.0f);
+							float r = glm::min(ilum_color.x * final_color.x, 1.0f);
+							float g = glm::min(ilum_color.y * final_color.y, 1.0f);
+							float b = glm::min(ilum_color.z * final_color.z, 1.0f);
 
 							putPixel(x, y, glm::vec3(r, g, b), 1 / z_reciprocal);
 						}
 						else
-						{
 							putPixel(x, y, Light::setFog(ilum_color, fog_color, /*1 /*/ z_reciprocal, z_near, z_far) * model->color, 1 / z_reciprocal);
-						}
 					}
-
-				
-					//putPixel(x, y, ilum_color * mColor,  z_reciprocal); 
 			}
 		}
 	}
@@ -418,11 +450,15 @@ glm::vec2 Renderer::BcCords2D(const std::vector<glm::vec3>& vertices, const glm:
 
 std::vector<glm::vec3> Renderer::FromVecToTriangle(Face& face, std::vector<glm::vec3>& new_vec)
 {
-
-	int x_center = viewportWidth / 2;
-	int y_center = viewportHeight / 2;
+		int x_center = viewportWidth / 2;
+		int y_center = viewportHeight / 2;
+	if (alias)
+	{
+		x_center *= 2;
+		y_center *= 2;
+	}
 	glm::vec3 triangleIndex = Utils::FaceToVertexIndex(face);
-	glm::vec3 center_shift = glm::vec3(x_center, y_center, z_center);
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, /*z_center*/0 );
 
 	return { new_vec[triangleIndex.x] + center_shift, new_vec[triangleIndex.y] + center_shift, new_vec[triangleIndex.z] + center_shift };
 }
@@ -432,6 +468,11 @@ std::vector<glm::vec3> Renderer::FromNormalToTriangle(Face& face, std::vector<gl
 
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
+	if (alias)
+	{
+		x_center *= 2;
+		y_center *= 2;
+	}
 	glm::vec3 triangleIndex = Utils::FaceToNormalIndex(face);
 	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
 
@@ -442,7 +483,12 @@ glm::vec3 Renderer::CenterShift(glm::vec3& point)
 {
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
-	glm::vec3 center_shift = glm::vec3(x_center, y_center, z_center);
+	if (alias)
+	{
+		x_center *= 2;
+		y_center *= 2;
+	}
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, /*z_center*/0);
 	return point + center_shift;
 
 }
@@ -451,7 +497,12 @@ void Renderer::DrawNormals(Face& face, std::vector<glm::vec3>& normals, std::vec
 {
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
-	glm::vec3 center_shift = glm::vec3(x_center, y_center, z_center);
+	if (alias)
+	{
+		x_center *= 2;
+		y_center *= 2;
+	}
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, /*z_center*/ 0);
 
 	int a = face.GetVertexIndex(0) - 1;
 	int b = face.GetVertexIndex(1) - 1;
@@ -656,20 +707,50 @@ void Renderer::createOpenGLBuffer()
 	glBindTexture(GL_TEXTURE_2D, glScreenTex);
 
 	// malloc for a texture on the gpu.
+	if (alias)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth/2, viewportHeight/2, 0, GL_RGB, GL_FLOAT, NULL);
+		glViewport(0, 0, viewportWidth/2, viewportHeight/2);
+	}
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glViewport(0, 0, viewportWidth, viewportHeight);
 }
 
 void Renderer::SwapBuffers()
 {
+
+	float* tempBuffer = colorBuffer;
+
 	// Makes GL_TEXTURE0 the current active texture unit
 	glActiveTexture(GL_TEXTURE0);
 
 	// Makes glScreenTex (which was allocated earlier) the current texture.
 	glBindTexture(GL_TEXTURE_2D, glScreenTex);
 
+	if (alias) {
+		tempBuffer = new float[3 * viewportWidth * viewportHeight];
+		//InitZBuffer();
+		int idx;
+		for (int x = 0; x < viewportWidth; x++) {
+			for (int y = 0; y < viewportHeight; y++) {
+				int nw = INDEX(aliasViewportWidth, 2 * x, 2 * y, 0),
+					ne = INDEX(aliasViewportWidth, 2 * x + 1, 2 * y, 0),
+					sw = INDEX(aliasViewportWidth, 2 * x, 2 * y + 1, 0),
+					se = INDEX(aliasViewportWidth , 2 * x + 1, 2 * y + 1, 0);
+				tempBuffer[INDEX(viewportWidth, x, y, 0)] = (colorBuffer[nw + 0] + colorBuffer[ne + 0] + colorBuffer[sw + 0] + colorBuffer[se + 0]) / 4;
+				tempBuffer[INDEX(viewportWidth, x, y, 1)] = (colorBuffer[nw + 1] + colorBuffer[ne + 1] + colorBuffer[sw + 1] + colorBuffer[se + 1]) / 4;
+				tempBuffer[INDEX(viewportWidth, x, y, 2)] = (colorBuffer[nw + 2] + colorBuffer[ne + 2] + colorBuffer[sw + 2] + colorBuffer[se + 2]) / 4;
+			}
+		}
+	}
+
 	// memcopy's colorBuffer into the gpu.
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, viewportWidth, viewportHeight, GL_RGB, GL_FLOAT, colorBuffer);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, viewportWidth, viewportHeight, GL_RGB, GL_FLOAT, tempBuffer);
+
+	if (alias) {
+		delete[] tempBuffer;
+	}
 
 	// Tells opengl to use mipmapping
 	glGenerateMipmap(GL_TEXTURE_2D);

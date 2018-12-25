@@ -327,11 +327,11 @@ std::vector<glm::vec3> Utils::VerticesXmat(std::vector<glm::vec3> vertices, glm:
 }
 
 
-std::vector<glm::vec3> Utils::CalcNorm(Face& face, std::vector<glm::vec3>& normals, std::vector<glm::vec3>&  vertices, std::string draw_genre, float size_normal, float viewportWidth, float viewportHeight)
+std::vector<glm::vec3> Utils::CalcNorm(Face& face, std::vector<glm::vec3>& normals, std::vector<glm::vec3>&  vertices, std::string draw_genre, float size_normal, float viewportWidth, float viewportHeight, float z_center)
 {
 	int x_center = viewportWidth / 2;
 	int y_center = viewportHeight / 2;
-	glm::vec3 center_shift = glm::vec3(x_center, y_center, 0);
+	glm::vec3 center_shift = glm::vec3(x_center, y_center, z_center);
 
 	int a = face.GetVertexIndex(0) - 1;
 	int b = face.GetVertexIndex(1) - 1;

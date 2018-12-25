@@ -50,35 +50,36 @@ glm::vec3 Light::setFog(glm::vec3 reflect_color, glm::vec3 fog_color, float z, f
 
 glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal, glm::vec3 eye, std::string shade_style, std::shared_ptr<MeshModel>& model)
 {
-	// ambient 
-
 	//diffuse
-	glm::vec3 min = MeshModel::findMin(newVertices);
-	glm::vec3 max = MeshModel::findMax(newVertices);
 
-	glm::vec3 light_pos = /*glm::vec3(max.x,min.y,min.z)*/ Utils::Vertex4to3(model_transform_without_projection * glm::vec4(translate, 1));
-	
-	//glm::vec3 model_pos = Utils::Vertex4to3(model->model_transform_without_projection * glm::vec4(model->translate, 1));
+	glm::vec3 light_pos = Utils::Vertex4to3(/*model_transform_without_projection*/ model_transform * glm::vec4(translate, 1));
 	glm::vec3 light_normal = glm::normalize(point - light_pos);
+
+	//if (shade_style == "flat")
+	//	light_normal = glm::normalize(light_pos - point);
+
 	if (this->source == "parallel")
-		light_normal = glm::normalize(-Utils::Vertex4to3(glm::vec4(light_pos,0)));
-	if (shade_style == "flat")
-		light_normal = glm::normalize(light_pos - point);
+	{
+		glm::vec3 min = MeshModel::findMin(vertices);
+		glm::vec3 max = MeshModel::findMax(vertices);
+
+		light_pos = Utils::Vertex4to3(glm::vec4(max.x,min.y,min.z,1) * glm::vec4(rotate, 1));
+		light_normal = glm::normalize(-light_pos);
+	}
+
 	glm::vec3 model_normal = glm::normalize(normal);
-	//light_normal = glm::normalize(normal);
 	float LN = std::max(glm::dot(light_normal, model_normal), 0.0f);
 
 
 	// specular
+
 	glm::vec3 v_normal = glm::normalize(eye - point);
 	glm::vec3 R = glm::normalize((2.0f * (glm::dot(model_normal, light_normal)) * model_normal) - light_normal);
-	//glm::vec3 R = glm::normalize(2.0f * light_normal * model_normal - light_normal);
-	//glm::vec3 to_camera = glm::normalize (-1.0f * point);
-	//float VR = std::max(glm::dot(R, v_normal),1.0f);
 	float VR = glm::dot(R, v_normal);
 
 
-	//glm::vec3 Ia = vault_ambient * color;
+	// all
+
 	glm::vec3 Id = model->diffuse * LN  * color;
 	glm::vec3 Is = model->specular  /** light_normal */ * glm::pow(VR,model->exponent)* color;
 

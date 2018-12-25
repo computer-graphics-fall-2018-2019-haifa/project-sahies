@@ -134,6 +134,7 @@ void RenderFrame(GLFWwindow* window, Scene& scene, Renderer& renderer, ImGuiIO& 
 
 	// Resize handling here... (a suggestion)
 	glViewport(0, 0, frameBufferWidth, frameBufferHeight);
+
 	// Clear the frame buffer
 	renderer.ClearColorBuffer(GetClearColor());
 

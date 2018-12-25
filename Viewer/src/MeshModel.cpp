@@ -86,11 +86,10 @@ void MeshModel::SetWorldTransformation()
  {
 	 this->SetWorldTransformation();
 	 this->SetObjectTransformation();
-	 //glm::vec2 x = model->ScaleSize(model->GetVertices(), 1280.0f, 720.0f);
+	 
 	 this->model_transform_without_projection = view_transform * worldTransformation  *this->GetObjectTransformation();
-	 this->model_transform =  /*Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1) * */ projection * view_transform * worldTransformation  *this->GetObjectTransformation();
-	 std::vector<glm::vec3> /*new_vec_n,*/ new_vec;
-	 //new_vec_n = Utils::VerticesXmat(this->GetNormals(), Utils::GetMatrix("scale", 50 * 1280.0f / 720.0f, 50 * 1280.0f / 720.0f, 1));
+	 this->model_transform =   glm::inverse(projection) * view_transform * worldTransformation  *this->GetObjectTransformation();
+
 	 newNormalVertices = Utils::VerticesXmat(normals, model_transform);
 	 newVerticesRender = Utils::VerticesXmat(this->GetVertices(), model_transform);
 	 newVertices = Utils::VerticesXmat(this->GetVertices(), model_transform_without_projection);

@@ -19,9 +19,9 @@ Camera::Camera( glm::vec3& eye,  glm::vec3& at,  glm::vec3& up, MeshModel& model
 	this->bottom = -1;
 	this->top = 1;
 	this->zNear = 1;
-	this->zFar = 10;
-	this->fovy = 26;
-	this->aspect = 1280.0f/720.0f;
+	this->zFar = 30;
+	this->fovy = 96;
+	this->aspect = 1.0f;
 	this->height = 1;
 	this->byTopBttm = false;
 	SetCameraLookAt(eye, at, up);
@@ -59,7 +59,8 @@ void Camera::SetCameraLookAt( glm::vec3& e,  glm::vec3& a,  glm::vec3& u)
 	glm::vec4 up4 = glm::vec4(u, 1) * Utils::GetMatrix("rotate", rotate);
 	glm::vec4 eye4 = glm::vec4(e, 1) * Utils::GetMatrix("translate", translate);
 
-	auto z = glm::normalize(eye4 - at4);
+	auto z = glm::normalize(
+	4 - at4);
 	glm::vec3 z3 = Utils::Vertex4to3(z);
 	auto x3 = glm::normalize(glm::cross(Utils::Vertex4to3(up4), z3));
 	auto y3 = glm::normalize(glm::cross(z3, x3));
@@ -74,9 +75,9 @@ void Camera::SetCameraLookAt( glm::vec3& e,  glm::vec3& a,  glm::vec3& u)
 	identity[3] -= glm::vec4(e,1) - glm::vec4(0, 0, 0, 1);
 
 	this->viewTransformation = c * identity * Utils::GetMatrix("scale", zoom);*/
-	glm::vec3 _eye = /*(Utils::GetMatrix("translate", translate)  * */glm::vec4(e[0], e[1], e[2], 1);
-	glm::vec3 _up = /*Utils::GetMatrix("rotate", rotate) * */glm::vec4(u[0], u[1], u[2], 1);
-	glm::vec3 _at = /*(Utils::GetMatrix("translate", translate)  **/ /*Utils::GetMatrix("rotate", rotate)) **/ glm::vec4(a[0], a[1], a[2], 1);
+	glm::vec3 _eye = Utils::Vertex4to3(Utils::GetMatrix("rotate", rotate)  * glm::vec4(e[0], e[1], e[2], 1));
+	glm::vec3 _up = Utils::Vertex4to3( glm::vec4(u[0], u[1], u[2], 1));
+	glm::vec3 _at = Utils::Vertex4to3((Utils::GetMatrix("translate", translate)  * glm::vec4(a[0], a[1], a[2], 1)));
 
 	glm::vec3 z = glm::normalize(_eye - _at);
 	glm::vec3 x = glm::normalize(glm::cross(_up, z));
@@ -166,7 +167,7 @@ void Camera::SetPerspectiveProjection(
 	else {
 		const float pi = 3.14159265;
 		// shear * scale to make 45 angle * divide by z
-		float h = glm::abs(_near * glm::tan(0.5*(fovy *  (pi / 180.0))));
+		float h = /*glm::abs(_near * glm::tan(0.5*(fovy *  (pi / 180.0))))*/(_far - _near) * tan(fovy * (pi / 180.0));
 		float width = aspectRatio * h;
 		 top = h;
 		 bottom = -h;
@@ -178,9 +179,9 @@ void Camera::SetPerspectiveProjection(
 	mat[1] = glm::vec4(0, (2 * _near) / (top - bottom),0,0);
 	mat[2] = glm::vec4((right + left) / (right - left), (top + bottom) / (top - bottom), -1 * (_far + _near) / (_far - _near),-1);
 	mat[3] = glm::vec4(0,0, -2 * (_far * _near) / (_far - _near),0);
-	this->projectionTransformation = mat;
-	eye.z = 125;
-	SetCameraLookAt();
+	this->projectionTransformation = Utils::GetMatrix("translate",1,1,-500)* mat;
+	/*eye.z = 12;
+	SetCameraLookAt();*/
 }
 
 void Camera::SetZoom(const float zoom)

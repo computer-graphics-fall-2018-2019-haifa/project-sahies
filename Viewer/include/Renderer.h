@@ -21,7 +21,7 @@ private:
 
 
 
-	void Renderer::putPixel(int i, int j, const glm::vec3& color, float z);
+	void Renderer::putPixel(int i, int j, const glm::vec3& color, float z, bool t = true);
 	void createBuffers(int viewportWidth, int viewportHeight);
 
 	GLuint glScreenTex;
@@ -34,6 +34,16 @@ public:
 	Renderer(int viewportWidth, int viewportHeight, int viewportX = 0, int viewportY = 0);
 	~Renderer();
 
+	float vaknin = 0;
+
+	 int Renderer::GetActiveViewportWidth();
+	 int Renderer::GetActiveViewportHeight();
+
+
+	float aliasViewportWidth;
+	float aliasViewportHeight;
+
+	void SetViewPort();
 	void Render( Scene& scene);
 	void SwapBuffers();
 	void ClearColorBuffer(const glm::vec3& color);
@@ -61,4 +71,5 @@ public:
 	void Renderer::RenderGrid(glm::mat4x4 rotateMatrix, glm::vec3& color);
 	void Renderer::DrawEdge(glm::vec4& v1, glm::vec4& v2, glm::vec3& color = glm::vec3(0, 0, 0));
 	// Add more methods/functionality as needed...
+	bool alias = false;
 };

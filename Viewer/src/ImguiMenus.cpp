@@ -93,7 +93,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		};
 
 		static int light_s = 0;
-		static std::string sour;
+		static std::string sour = "point";
 
 		if (ImGui::RadioButton("Point", light_s == Point))
 		{
@@ -121,10 +121,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		{
 			std::shared_ptr<MeshModel> light_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(light_path));
 			
-			light_obj->SetModelName("Light " + std::to_string(LightCounter));
+			light_obj->SetModelName("Light " + std::to_string(LightCounter) + " - " + sour);
 			LightCounter++;
 			std::shared_ptr<Light> lig = std::make_shared<Light>(*light_obj);
-			SubmitTransform(lig, renderer, -6, 3, 0, "translate", "object");
+			SubmitTransform(lig, renderer, -6, 3, 1, "translate", "object");
 			SubmitTransform(lig, renderer, 0.1, 0.1, 1, "scale", "object");
 			SubmitTransform(lig, renderer, 1, -5, 1, "rotate", "object");
 			//lig->matTransformations = { Utils::GetMatrix("scale",0.1,0.1,1), Utils::GetMatrix("rotate",1, -5, 1), Utils::GetMatrix("translate",-6,3,0) };
@@ -170,7 +170,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			ImGui::SliderFloat("Ambient Vault", &active_light->vault_ambient, 0.0f, 1.0f);*/
 
 			if (ImGui::SliderFloat("Light Power", &active_light->light_power, 0.0f, 1.0f));
-		
+			
+			if (active_light->source == "parallel")
+			{
+				if (ImGui::DragFloat("X Direction", &active_light->rotate.x, 0.2f) || (ImGui::DragFloat("Y Direction", &active_light->rotate.y, 0.2f)))
+					SubmitTransform(active_light, renderer, active_light->rotate.x, active_light->rotate.y, 1, "rotate", "object");
+			}
+
 			if (ImGui::ColorEdit3("Light Color", (float*)&lColor))
 				active_light->SetColor(lColor);
 
@@ -209,20 +215,22 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			}
 
 			static float scale_light = 1.0f;
-			if (ImGui::DragFloat("Scale Light", &active_light->scale.x, 0.1f)) {
+			if (ImGui::DragFloat("Scale", &active_light->scale.x, 0.1f)) {
 				SubmitTransform(active_light, renderer, active_light->scale.x, active_light->scale.x, active_light->scale.x, "scale", "object");
 				active_light->scale.y = active_light->scale.x;
 				active_light->scale.z = active_light->scale.x;
 			}
 
-			static float   translate_light_y = 0.0f, translate_light_z = 0.0f;
-			if (ImGui::DragFloat("translate x light", &active_light->translate.x, 0.5f) ||
-				ImGui::DragFloat("translate y light", &active_light->translate.y, 0.5f) ||
-				ImGui::DragFloat("translate z light", &active_light->translate.z, 0.5f))
+			static float   translate_light_y = 0.0f, translate_light_z = 1.0f;
+			if (ImGui::DragFloat("Move x", &active_light->translate.x, 0.5f) ||
+				ImGui::DragFloat("Move y", &active_light->translate.y, 0.5f) ||
+				ImGui::DragFloat("Move z", &active_light->translate.z, 0.5f))
 				SubmitTransform(active_light, renderer, active_light->translate.x, active_light->translate.y, active_light->translate.z, "translate", "object");
 
 			//rotate model around axis
-			static float light_xrotate = 0.0f, light_yrotate = 0.0f, light_zrotate = 0.0f;
+
+			
+			/*static float light_xrotate = 0.0f, light_yrotate = 0.0f, light_zrotate = 0.0f;
 			if (ImGui::DragFloat("rotate around x light", &active_light->rotate.x, 0.5f) ||
 				ImGui::DragFloat("rotate around y light", &active_light->rotate.y, 0.5f) ||
 				ImGui::DragFloat("rotate around z light", &active_light->rotate.z, 0.5f))
@@ -231,7 +239,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 				if (active_light->rotate.y >= 360 || active_light->rotate.y <= -360) light_yrotate = 0;
 				if (active_light->rotate.z >= 180 || active_light->rotate.z <= -180) light_zrotate = 0;
 				SubmitTransform(active_light, renderer, active_light->rotate.x, active_light->rotate.y, active_light->rotate.z, "rotate", "object");
-			}
+			}*/
 
 		/*	if (active_light->source == "ambient")
 			{
@@ -245,6 +253,19 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	/*****************   Camera Menu   *****************/
 	if (ImGui::CollapsingHeader("Cameras"))
 	{
+		ImGui::Checkbox("anti-aliasing", &renderer.alias);
+		if (renderer.alias)
+		{
+			renderer.SetViewPort();
+			camera->zoom = { 1 / 2.001, 1 / 2.001, 1 };
+			camera->SetCameraLookAt();
+		}
+		else
+		{
+			camera->zoom = { 1 / 1, 1 / 1, 1 };
+			camera->SetCameraLookAt();
+		}
+
 		//add camera btn
 		if (ImGui::Button("Add Camera")) {
 			std::shared_ptr<MeshModel> cam_obj = std::make_shared<MeshModel>(Utils::LoadMeshModel(camera_path));
@@ -301,7 +322,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 
 		//Near, Far and Ratio Slide Bar
-		static float _near = 1.0f, _far = 10.0f, _ratio = 1.0f;
+		static float _near = 1.0f, _far = 30.0f, _ratio = 1.0f;
 		if (ImGui::SliderFloat("Near", &_near, 0.0f, 250.0f)) {
 			camera->zNear = _near;
 			camera->byTopBttm = false;
@@ -310,12 +331,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			camera->zFar = _far;
 			camera->byTopBttm = false;
 		}
-		if (ImGui::SliderFloat("Ratio", &_ratio, 0.0f, 250.0f)) {
+		if (ImGui::SliderFloat("Ratio", &_ratio, 1.0f, 250.0f)) {
 			camera->aspect = _ratio;
 			camera->byTopBttm = false;
 		}
 
-		static float _eye[3] = {
+		 float _eye[3] = {
 			camera->eye.x,
 			camera->eye.y,
 			camera->eye.z
@@ -327,7 +348,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			camera->SetCameraLookAt(camera->eye, camera->at, camera->up);
 		}
 
-		static float _at[3] = {
+		 float _at[3] = {
 			camera->at.x,
 			camera->at.y,
 			camera->at.z
@@ -340,7 +361,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 		}
 
-		static float _up[3] = {
+		 float _up[3] = {
 			camera->up.x,
 			camera->up.y,
 			camera->up.z
@@ -375,8 +396,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 
 		if (mode == Perspective) {
 			//Fovy Slide Bar
-			static float fovy = 1.0f;
-			if (ImGui::SliderFloat("Fovy", &fovy, 0.0f, 250.0f)) {
+			static float fovy = 89.0f;
+			if (ImGui::SliderFloat("Fovy", &fovy, 89.0f, 250.0f)) {
 				camera->fovy = fovy;
 				camera->byTopBttm = false;
 			}
@@ -455,27 +476,27 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 	*/
 
 
-		static float worldrotate_x = 0, worldrotate_y = 0, worldrotate_z = 0;
-		if (ImGui::SliderFloat("worldrotate_x", &worldrotate_x, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("worldrotate_y", &worldrotate_y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("worldrotate_z", &worldrotate_z, -20.0f, 20.0f))
-			SubmitTransform(camera, renderer, worldrotate_x, worldrotate_y, worldrotate_z, "rotate", "world");
+		//static float worldrotate_x = 0, worldrotate_y = 0, worldrotate_z = 0;
+		//if (ImGui::SliderFloat("worldrotate_x", &worldrotate_x, -20.0f, 20.0f) ||
+		//	ImGui::SliderFloat("worldrotate_y", &worldrotate_y, -20.0f, 20.0f) ||
+		//	ImGui::SliderFloat("worldrotate_z", &worldrotate_z, -20.0f, 20.0f))
+		//	SubmitTransform(camera, renderer, worldrotate_x, worldrotate_y, worldrotate_z, "rotate", "world");
 
 
-		static float worldscale_x = 1.0f, worldscale_y = 1.0f, worldscale_z = 1.0f, worldtranslate_x = 0.0f, worldtranslate_y = 0.0f, worldtranslate_z = 0.0f;
-		if (ImGui::SliderFloat("worldscale_x", &worldscale_x, -20.0f, 20.0f) || 
-			ImGui::SliderFloat("worldscale_y", &worldscale_y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("worldscale_z", &worldscale_z, -20.0f, 20.0f))
-		{
-			SubmitTransform(camera, renderer, worldscale_x, worldscale_y, worldscale_z, "scale", "world");
-		}
+		//static float worldscale_x = 1.0f, worldscale_y = 1.0f, worldscale_z = 1.0f, worldtranslate_x = 0.0f, worldtranslate_y = 0.0f, worldtranslate_z = 0.0f;
+		//if (ImGui::SliderFloat("worldscale_x", &worldscale_x, -20.0f, 20.0f) || 
+		//	ImGui::SliderFloat("worldscale_y", &worldscale_y, -20.0f, 20.0f) ||
+		//	ImGui::SliderFloat("worldscale_z", &worldscale_z, -20.0f, 20.0f))
+		//{
+		//	SubmitTransform(camera, renderer, worldscale_x, worldscale_y, worldscale_z, "scale", "world");
+		//}
 
-		if (ImGui::SliderFloat("worldtranslate_x", &worldtranslate_x, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("worldtranslate_y", &worldtranslate_y, -20.0f, 20.0f) ||
-			ImGui::SliderFloat("worldtranslate_z", &worldtranslate_z, -20.0f, 20.0f))
-		{
-			SubmitTransform(camera, renderer, worldtranslate_x, worldtranslate_y, worldtranslate_z, "translate", "world");
-		}
+		//if (ImGui::SliderFloat("worldtranslate_x", &worldtranslate_x, -20.0f, 20.0f) ||
+		//	ImGui::SliderFloat("worldtranslate_y", &worldtranslate_y, -20.0f, 20.0f) ||
+		//	ImGui::SliderFloat("worldtranslate_z", &worldtranslate_z, -20.0f, 20.0f))
+		//{
+		//	SubmitTransform(camera, renderer, worldtranslate_x, worldtranslate_y, worldtranslate_z, "translate", "world");
+		//}
 
 		//static float world_x = 0.0f;
 		//if (ImGui::SliderFloat("world_x", &world_x, -20.0f, 20.0f) ||
@@ -518,6 +539,30 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		if (ImGui::ColorEdit3("Model Color", (float*)&mColor))
 			model->SetColor(mColor);
 
+		
+		ImGui::Checkbox("UnUniform Material",&model->marble);
+		if (model->marble)
+		{
+			static glm::vec4 mColor1(1.0f, 0.0f, 0.0f, 0.0f);
+			if (ImGui::ColorEdit3("Color 1", (float*)&mColor1))
+				model->color1 = mColor1;
+			static glm::vec4 mColor2(0.0f, 1.0f, 0.0f, 0.0f);
+			if (ImGui::ColorEdit3("Color 2", (float*)&mColor2))
+				model->color2 = mColor2;
+			enum uniform
+			{
+				type1,
+				type2,
+				type3
+			};
+			static int normals_mode = 0;
+			if (ImGui::RadioButton("type1", model->uni_type == type1)) { model->uni_type = type1; } ImGui::SameLine();
+			if (ImGui::RadioButton("type2", model->uni_type == type2)) { model->uni_type = type2; }ImGui::SameLine();
+			if (ImGui::RadioButton("type3", model->uni_type == type3)) { model->uni_type = type3; }
+		}
+
+
+
 		//static float scale_model = 1.0f; 
 		if (ImGui::DragFloat("Scale model", &model->scale_model, 0.1f)) {
 			SubmitTransform(model, renderer, model->scale_model, model->scale_model, model->scale_model, "scale", "object");
@@ -532,7 +577,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			ImGui::DragFloat("scale z", &model->scale.z, 0.05f))
 			SubmitTransform(model, renderer, model->scale.x, model->scale.y, model->scale.z, "scale", "object");
 
-		static float  translate_x = 0.0f, translate_y = 0.0f, translate_z = 0.0f;
+		static float  translate_x = 0.0f, translate_y = 0.0f, translate_z = 1.0f;
 		if (ImGui::DragFloat("translate x", &model->translate.x, 0.5f) ||
 			ImGui::DragFloat("translate y", &model->translate.y, 0.5f) ||
 			ImGui::DragFloat("translate z", &model->translate.z, 0.5f))

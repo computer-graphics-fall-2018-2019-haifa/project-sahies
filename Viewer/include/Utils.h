@@ -28,13 +28,12 @@ public:
 	static glm::vec3 Utils::FaceToNormalIndex(Face& face);
 	static std::vector<glm::vec3> Utils::CalcNormals(std::vector<glm::vec3>& vertices, std::vector<Face>& faces);
 	static std::vector<glm::vec3> Utils::VerticesXmat(std::vector<glm::vec3> vertices, glm::mat4 matrix);
-	static std::vector<glm::vec3> Utils::CalcNorm(Face& face, std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>& normals, std::string draw_genre, float size_normal, float viewportWidth, float viewportHeight);
+	static std::vector<glm::vec3> Utils::CalcNorm(Face& face, std::vector<glm::vec3>&  vertices, std::vector<glm::vec3>& normals, std::string draw_genre, float size_normal, float viewportWidth, float viewportHeight, float z_center);
 	// Add here more static utility functions...
 	// For example:
 	//	1. function that gets an angle, and returns a rotation matrix around a certian axis
 	//	2. function that gets a vector, and returns a translation matrix
 	//	3. anything else that may be useful in global scope
-
 private:
 	static std::string GetFileName(const std::string& filePath);
 };

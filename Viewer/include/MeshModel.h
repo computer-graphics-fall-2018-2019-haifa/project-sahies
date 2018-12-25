@@ -43,6 +43,10 @@ public:
 	std::vector<glm::vec3> newVertices;
 	float scale_model = 1.0f;
 	glm::vec3 color = glm::vec3(0);
+	bool marble = false;
+	glm::vec3 color1 = glm::vec3(1,0,0);
+	glm::vec3 color2 = glm::vec3(0,1,0);
+	int uni_type;
 
 	std::vector<glm::mat4> matTransformations;
 	std::string type;
