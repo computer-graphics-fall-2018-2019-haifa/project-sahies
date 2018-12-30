@@ -204,10 +204,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 			if (ImGui::RadioButton("Flat", style == Flat)) {
 				style = Flat;
 				scene.draw_style = "flat";
+				if (!scene.isPerspective)
+					SubmitTransform(model, renderer, 1, 1, 1, "translate", "object");
 			} ImGui::SameLine();
 			if (ImGui::RadioButton("Gouraud", style == Gouraud)) {
 				style = Gouraud; 
 				scene.draw_style = "gouraud";
+				if (!scene.isPerspective)
+				SubmitTransform(model, renderer, 1, 1, -100, "translate", "object");
 			}
 			if (ImGui::RadioButton("Phong", style == Phong)) {
 				style = Phong;
@@ -598,6 +602,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene& scene, Renderer& renderer)
 		ImGui::SliderFloat("Diffuse", &model->diffuse, 0.0f, 1.0f);
 
 		ImGui::SliderFloat("Specular", &model->specular, 0.0f, 1.0f);
+
 		ImGui::DragInt("Specular exponent", &model->exponent, 1);
 
 		ImGui::SliderFloat("Ambient", &model->ambient, 0.0f, 1.0f);

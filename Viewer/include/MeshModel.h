@@ -51,9 +51,9 @@ public:
 	std::vector<glm::mat4> matTransformations;
 	std::string type;
 	float ambient = 0.0f;
-	float specular = 0.0f;
-	float diffuse = 0.2f;
-	int exponent = 1.0f;
+	float specular = 0.2f;
+	float diffuse = 0.3f;
+	int exponent = 300;
 	glm::mat4 model_transform_without_projection = glm::mat4(1);
 	glm::mat4 model_transform = glm::mat4(1);
 

@@ -302,7 +302,10 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 	glm::vec3 max = MeshModel::findMax(vertices);
 
 	std::vector<glm::vec3> face_normal = Utils::CalcNorm(face, normals, all_vertices, "face", 0.5, GetActiveViewportWidth() , GetActiveViewportHeight(), z_center); // {point, normal, end}
+	if (isPerspective)
+		face_normal = Utils::CalcNorm(face, normals, model->newVertices, "face", 0.5, GetActiveViewportWidth(), GetActiveViewportHeight(), z_center); // {point, normal, end}
 	std::vector<glm::vec3>  vertices_normal = Utils::CalcNorm(face, normals, all_vertices, "vertex", 1, GetActiveViewportWidth(), GetActiveViewportHeight(), z_center); // TODO a problem!!!!! normals <=> all_vertices
+
 	glm::vec3 point(0), normal(0);
 
 	//flat normal
@@ -332,16 +335,10 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 					 x_reciprocal = lambda1 * (vertices[0].x) + lambda2 * (vertices[1].x) + lambda3 * (vertices[2].x);
 					 y_reciprocal = lambda1 * (vertices[0].y) + lambda2 * (vertices[1].y) + lambda3 * (vertices[2].y);
 				}
-				// flat);
-					//normal = normals[0] + normals[1] + normals[2] /*/ glm::vec3(3)*/ ;
-					//normal = normals[0] + normals[1] + normals[2];
-					//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
-				point = glm::vec3(x_reciprocal, y_reciprocal, z_reciprocal);
-				//point = (vertices[0] + vertices[1] + vertices[2]) / glm::vec3(3);
+		
 
-				/*glm::vec3 normalized_normal = glm::normalize(normal);
-				float d = -glm::dot(vertices[0], normalized_normal);
-				float z = -(normalized_normal.x * x + normalized_normal.y *y + d) / normalized_normal.z;*/
+				point = glm::vec3(x_reciprocal, y_reciprocal, z_reciprocal);
+
 				glm::vec3 ilum_color(0);
 				glm::vec3 phongColor(0);
 				if ("gouraud" == draw_style)
@@ -364,7 +361,7 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 									continue;
 								}
 
-								colorPhong.push_back(lam[i] * light->SetIlum(vertices[i] /*point*/, vertices_normal[i], gl_eye, draw_style, model));
+								colorPhong.push_back(lam[i] * light->SetIlum(vertices[i], vertices_normal[i], gl_eye, draw_style, model, isPerspective));
 							}
 						}
 						phongColor = colorPhong[0] + colorPhong[1] + colorPhong[2];
@@ -374,14 +371,7 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 				}
 
 					glm::vec3 ambient(0);
-					/*glm::vec3 g = glm::vec3(1, 0, 0);
-					std::vector<glm::vec3> platte_color = {g};
-					for (float i=0; i<1;i+0.1)
-					{
-						g.z += i;
-						g.x -= i;
-						platte_color.push_back(g);
-					}*/
+					
 					glm::vec3 final_color = model->color;
 
 					if (model->marble) 
@@ -402,7 +392,7 @@ void Renderer::FillTriangle(Face& face, std::vector<glm::vec3>&  all_vertices, s
 								continue;
 							}
 
-							ilum_color += light->SetIlum(point, normal, gl_eye, draw_style, model);
+							ilum_color += light->SetIlum(point, normal, gl_eye, draw_style, model, isPerspective);
 
 						}
 						ilum_color += ambient;

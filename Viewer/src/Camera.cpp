@@ -151,7 +151,7 @@ void Camera::SetOrthographicProjection(
 			0, 0, 2.0 / (_near - _far), -(_far + _near) / (_far - _near),
 			0, 0,0, 1
 	};
-	this->projectionTransformation = glm::transpose(mat);
+	this->projectionTransformation = /*Utils::GetMatrix("translate", 1, 1, -100) **/ glm::transpose(mat);
 }
 
 void Camera::SetPerspectiveProjection(

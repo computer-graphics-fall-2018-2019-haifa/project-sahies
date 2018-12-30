@@ -48,15 +48,15 @@ glm::vec3 Light::setFog(glm::vec3 reflect_color, glm::vec3 fog_color, float z, f
 
 
 
-glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal, glm::vec3 eye, std::string shade_style, std::shared_ptr<MeshModel>& model)
+glm::vec3 Light::SetIlum(glm::vec3 point, glm::vec3 normal, glm::vec3 eye, std::string shade_style, std::shared_ptr<MeshModel>& model, bool isPerspective)
 {
 	//diffuse
 
 	glm::vec3 light_pos = Utils::Vertex4to3(/*model_transform_without_projection*/ model_transform * glm::vec4(translate, 1));
 	glm::vec3 light_normal = glm::normalize(point - light_pos);
 
-	//if (shade_style == "flat")
-	//	light_normal = glm::normalize(light_pos - point);
+	if ((shade_style == "flat") && (isPerspective))
+		light_normal = glm::normalize(light_pos - point);
 
 	if (this->source == "parallel")
 	{
